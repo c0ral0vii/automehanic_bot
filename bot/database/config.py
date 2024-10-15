@@ -30,10 +30,10 @@ async def add_user(user_id: int, username: str, fullname: str, phone: str):
     async with async_session() as session:
         async with session.begin():
             new_user = User(
-                user_id=user_id,
-                username=username,
-                fullname=fullname,
-                phone=phone
-            )
+            user_id=user_id,
+            name=username, 
+            surname=fullname,
+            phone_number=phone
+        )
             session.add(new_user)
             await session.commit()
