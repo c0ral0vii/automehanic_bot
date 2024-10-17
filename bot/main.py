@@ -3,13 +3,14 @@ from aiogram import Bot, Dispatcher, types
 from config import BOT_TOKEN
 from handlers.start_handler import start_router
 from handlers.catalog_handler import catalog_router
+from handlers.contact_handler import contact_router
 from utils.bot_commands import private
 
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-dp.include_routers(start_router, catalog_router)
+dp.include_routers(start_router, catalog_router, contact_router)
 
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
