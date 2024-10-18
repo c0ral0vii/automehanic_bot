@@ -9,3 +9,5 @@ DB_NAME=os.environ.get("DB_NAME")
 DB_PASSWORD=os.environ.get("DB_PASSWORD")
 DB_PORT=os.environ.get("DB_PORT")
 DB_USER=os.environ.get("DB_USER")
+ADMINS_LIST = os.environ.get("ADMINS_LIST", "")
+ADMINS_LIST = list(map(int, ADMINS_LIST.split(","))) if ADMINS_LIST else []
