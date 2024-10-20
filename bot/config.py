@@ -3,10 +3,10 @@ import os
 
 load_dotenv(find_dotenv())
 
-BOT_TOKEN=os.environ.get("BOT_TOKEN")
-DB_HOST=os.environ.get("DB_HOST")
-DB_NAME=os.environ.get("DB_NAME")
-DB_PASS=os.environ.get("DB_PASS")
-DB_PORT = str(os.environ.get("DB_PORT", "5432"))
-DB_USER=os.environ.get("DB_USER")
-ADMINS_LIST = os.environ.get("ADMINS_LIST")
+BOT_TOKEN = str(os.environ.get("BOT_TOKEN", ""))
+DB_HOST = str(os.environ.get("DB_HOST", ""))
+DB_NAME = str(os.environ.get("DB_NAME", ""))
+DB_PASS = str(os.environ.get("DB_PASS", ""))
+DB_PORT = str(os.environ.get("DB_PORT", "5432"))  
+DB_USER = str(os.environ.get("DB_USER", ""))
+ADMINS_LIST = str(os.environ.get("ADMINS_LIST", ""))
