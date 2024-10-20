@@ -10,4 +10,6 @@ DB_PASSWORD=os.environ.get("DB_PASSWORD")
 DB_PORT=os.environ.get("DB_PORT")
 DB_USER=os.environ.get("DB_USER")
 ADMINS_LIST = os.environ.get("ADMINS_LIST", "")
-ADMINS_LIST = list(map(int, ADMINS_LIST.split(","))) if ADMINS_LIST else []
+ADMINS_LIST = [
+    int(admin.split("#")[0].strip()) for admin in ADMINS_LIST.split(",") if admin.split("#")[0].strip().isdigit()
+]
