@@ -8,6 +8,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+EXPOSE 8000
+
 RUN alembic upgrade head
 
 CMD ["python", "bot/main.py"]
