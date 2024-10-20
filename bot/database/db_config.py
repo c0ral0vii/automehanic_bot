@@ -3,10 +3,10 @@ from sqlalchemy.exc import IntegrityError
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from .models import *
-from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME  # ..config for catalog_parser.py
+from config import DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME  # ..config for catalog_parser.py
 from typing import List
 
-DATABASE_URL = f'postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+DATABASE_URL = f'postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 
 engine = create_async_engine(DATABASE_URL, echo=True)
 
