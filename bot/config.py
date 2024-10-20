@@ -7,9 +7,6 @@ BOT_TOKEN=os.environ.get("BOT_TOKEN")
 DB_HOST=os.environ.get("DB_HOST")
 DB_NAME=os.environ.get("DB_NAME")
 DB_PASS=os.environ.get("DB_PASS")
-DB_PORT=os.environ.get("DB_PORT")
+DB_PORT = str(os.environ.get("DB_PORT", "5432"))
 DB_USER=os.environ.get("DB_USER")
-ADMINS_LIST = os.environ.get("ADMINS_LIST", "")
-ADMINS_LIST = [
-    int(admin.split("#")[0].strip()) for admin in ADMINS_LIST.split(",") if admin.split("#")[0].strip().isdigit()
-]
+ADMINS_LIST = os.environ.get("ADMINS_LIST")
