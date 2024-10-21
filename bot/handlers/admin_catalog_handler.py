@@ -81,7 +81,7 @@ async def process_category_selection(message: types.Message, state: FSMContext):
 
 @admin_router.message(StateFilter(AdminStates.waiting_for_all_users_confirmation))
 async def process_all_users_selection(message: types.Message, state: FSMContext):
-    confirmation = message.text.strip().lower()
+    confirmation = message.text.strip()
     if confirmation == 'Да':
         await state.update_data(all=confirmation)
         await message.answer('Введите новый уровень цен для всех пользователей', reply_markup=create_simple_inline_navigation())

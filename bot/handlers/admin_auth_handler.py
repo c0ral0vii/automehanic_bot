@@ -132,5 +132,5 @@ async def reload_catalog(message: types.Message):
     try:
         await add_product()
         await message.answer(f'Каталог обновлён✅')
-    except:
-        await message.answer(f'Возникла ошибка❌')
+    except FileNotFoundError:
+        await message.answer(f'Возникла ошибка❌\nПоместите файл в bot/utils/data/catalog/data.xlsx')
