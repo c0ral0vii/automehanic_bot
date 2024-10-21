@@ -43,9 +43,6 @@ async def get_price_for_user(user_id: int, article_number: str):
             result = await session.execute(select(User).where(User.user_id == user_id))
             existing_user = result.scalars().first()
 
-            if existing_user is None or existing_user.role == UserRole.UNDEFINED:
-                return PriceLevel.DEFAULT.value
-
             product_result = await session.execute(
                 select(Product).where(Product.article_number == article_number)
             )
@@ -54,7 +51,8 @@ async def get_price_for_user(user_id: int, article_number: str):
             if product is None:
                 return None
 
-            return existing_user.price_level.value
+            if existing_user is None or existing_user.role == UserRole.UNDEFINED:
+                return product.default_price
 
             if existing_user.price_level == PriceLevel.DEFAULT:
                 return product.default_price
@@ -70,6 +68,9 @@ async def get_price_for_user(user_id: int, article_number: str):
 
             if existing_user.price_level == PriceLevel.FOURTH:
                 return product.fourth_lvl_price
+
+            return None
+
 
 
 
@@ -107,7 +108,7 @@ async def add_product():
         async with session.begin():
             try:
                 async for product in add_products_from_excel():
-                        
+
                     result = await session.execute(
                         select(Product).where(Product.article_number == product.get('article_number'))
                     )
@@ -259,7 +260,7 @@ async def update_user_price_level(user_id: int, new_price_level: int):
             user.price_level = new_price_level
             await session.commit()
             return True
-        
+
 
 async def check_auth(user_id: int) -> bool:
     async with async_session() as session:
@@ -270,7 +271,7 @@ async def check_auth(user_id: int) -> bool:
             if not user:
                 return False
             return True
-        
+
 
 async def my_profile(user_id: int) -> tuple:
     async with async_session() as session:
