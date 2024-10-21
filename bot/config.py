@@ -4,9 +4,12 @@ import os
 load_dotenv(find_dotenv())
 
 BOT_TOKEN = str(os.environ.get("BOT_TOKEN", ""))
-DB_HOST = str(os.environ.get("DB_HOST", ""))
+DB_HOST = str(os.environ.get("DB_HOST", "db"))
 DB_NAME = str(os.environ.get("DB_NAME", ""))
-DB_PASS = str(os.environ.get("DB_PASS", ""))
-DB_PORT = str(os.environ.get("DB_PORT", "5432"))  
-DB_USER = str(os.environ.get("DB_USER", ""))
-ADMINS_LIST = str(os.environ.get("ADMINS_LIST", ""))
+DB_PASSWORD = str(os.environ.get("DB_PASS", "root"))
+DB_PORT = str(os.environ.get("DB_PORT", "5432")  )
+DB_USER = str(os.environ.get("DB_USER", "root"))
+ADMINS_LIST = os.environ.get("ADMINS_LIST", "")
+ADMINS_LIST = [
+    int(admin.split("#")[0].strip()) for admin in ADMINS_LIST.split(",") if admin.split("#")[0].strip().isdigit()
+]
