@@ -1,6 +1,11 @@
 from dotenv import load_dotenv, find_dotenv
 import os
 
+# это для сброса кэша у меня
+for key in list(os.environ.keys()):
+    if key.startswith("BOT_") or key.startswith("DB_") or key == "ADMINS_LIST":
+        del os.environ[key]
+
 load_dotenv(find_dotenv())
 
 BOT_TOKEN = str(os.environ.get("BOT_TOKEN", ""))
