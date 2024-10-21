@@ -1,11 +1,10 @@
 import pandas as pd
 
-
 async def add_products_from_excel():
-    df = pd.read_excel("./bot/utils/data/catalog/data.xlsx", sheet_name='КАТАЛОГ')
+    df = pd.read_excel("data.xlsx", sheet_name='КАТАЛОГ')
     df = df[['Исходный номер', 'Наименование', 'Наличие, шт.', 'Розничная цена, руб.', 'Уровень цен 1, руб.',
-         'Уровень цен 2, руб.', 'Уровень цен 3, руб.', 'Уровень цен 4, руб.']]
-    
+           'Уровень цен 2, руб.', 'Уровень цен 3, руб.', 'Уровень цен 4, руб.']]
+  
     for index, row in df.iterrows():
         article_number = row['Исходный номер']
         name = row['Наименование'] if not pd.isnull(row['Наименование']) else None
@@ -28,3 +27,4 @@ async def add_products_from_excel():
             'third_lvl_price': third_lvl_price,
             'fourth_lvl_price': fourth_lvl_price,
         }
+

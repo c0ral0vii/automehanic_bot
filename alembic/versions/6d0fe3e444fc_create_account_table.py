@@ -17,8 +17,6 @@ down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-# role_enum = sa.Enum('ADMIN', 'USER', 'UNDEFINED', 'CANCELLED', name='role')
-# price_level_enum = sa.Enum('DEFAULT', 'FIRST', 'SECOND', 'THIRD', 'FOURTH', name='price_level')
 
 
 def upgrade() -> None:
@@ -47,7 +45,6 @@ def upgrade() -> None:
     sa.Column('phone_number', sa.String(), nullable=False),
     sa.Column('role', sa.Enum('ADMIN', 'USER', 'UNDEFINED', 'CANCELLED', name='role'), nullable=False),
     sa.Column('price_level', sa.Enum('DEFAULT', 'FIRST', 'SECOND', 'THIRD', 'FOURTH', name='price_level'), nullable=False),
-
     sa.Column('created', sa.DateTime(), nullable=False),
     sa.Column('updated', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('id')
