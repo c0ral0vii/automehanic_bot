@@ -16,5 +16,4 @@ class IsAdmin(Filter):
         pass
 
     async def __call__(self, message: types.Message, bot: Bot) -> bool:
-        print(ADMINS_LIST)
         return message.from_user.id in ADMINS_LIST

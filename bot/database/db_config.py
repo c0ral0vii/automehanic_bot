@@ -3,16 +3,16 @@ from sqlalchemy.exc import IntegrityError
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from .models import *
-from config import DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME  # ..config for catalog_parser.py
+from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME
 from typing import List
 from utils.catalog_parser import add_products_from_excel
 
-DATABASE_URL = f'postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+DATABASE_URL = f'postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 
 engine = create_async_engine(DATABASE_URL, echo=True)
 
 async_session = async_sessionmaker(
-    bind=engine, class_=AsyncSession, expire_on_commit=False
+    bind=engine, class_=AsyncSession, expire_on_commit=False,
 )
 
 async def create_db():
@@ -54,6 +54,8 @@ async def get_price_for_user(user_id: int, article_number: str):
             if product is None:
                 return None
 
+            return existing_user.price_level.value
+
             if existing_user.price_level == PriceLevel.DEFAULT:
                 return product.default_price
 
@@ -69,7 +71,6 @@ async def get_price_for_user(user_id: int, article_number: str):
             if existing_user.price_level == PriceLevel.FOURTH:
                 return product.fourth_lvl_price
 
-            return None
 
 
 async def add_user(user_id: int, name: str, surname: str, organization_name: str, phone_number: str):
@@ -230,6 +231,7 @@ async def update_price_for_category(category: UserRole, new_price_level: PriceLe
             await session.commit()
             return f"Уровень цен для всех пользователей с категорией {category.value} успешно изменён на {new_price_level.value}."
 
+
 async def update_price_for_all_users(new_price_level: PriceLevel):
     async with async_session() as session:
         async with session.begin():
@@ -257,3 +259,32 @@ async def update_user_price_level(user_id: int, new_price_level: int):
             user.price_level = new_price_level
             await session.commit()
             return True
+        
+
+async def check_auth(user_id: int) -> bool:
+    async with async_session() as session:
+        async with session.begin():
+            result = await session.execute(select(User).where(User.user_id == user_id))
+            user = result.scalar_one_or_none()
+
+            if not user:
+                return False
+            return True
+        
+
+async def my_profile(user_id: int) -> tuple:
+    async with async_session() as session:
+        async with session.begin():
+            result = await session.execute(select(User).where(User.user_id == user_id))
+            user = result.scalars().first()
+
+            if not user:
+                return
+
+            return {
+                'name': user.name,
+                'surname': user.surname,
+                'phone': user.phone_number,
+                'organization': user.organization_name,
+                'role': 'Авторизован',
+            }

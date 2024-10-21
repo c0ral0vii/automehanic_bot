@@ -73,7 +73,7 @@ async def all_requests_handler(message: types.Message):
 async def all_users_handler(message: types.Message):
     users = await get_all_users()
     if users:
-        user_list = "\n".join([f"{i + 1}. {user.name} {user.surname} | {user.organization_name} | {user.phone_number} | Роль: {user.role} | Уровень цен: {user.price_level} (ID: {user.user_id})" for i, user in enumerate(users)])
+        user_list = "\n".join([f"{i + 1}. {user.name} {user.surname} | {user.organization_name} | {user.phone_number} | Роль: {user.role.value} | Уровень цен: {user.price_level.value} (ID: {user.user_id})" for i, user in enumerate(users)])
 
         max_message_length = 4096
         if len(user_list) > max_message_length:
@@ -89,7 +89,7 @@ async def all_users_handler(message: types.Message):
 async def all_authenticated_users_handler(message: types.Message):
     users = await get_users_with_role_user()
     if users:
-        user_list = "\n".join([f"{i + 1}. {user.name} {user.surname} | {user.organization_name} | {user.phone_number} | Роль: {user.role} | Уровень цен: {user.price_level} (ID: {user.user_id})" for i, user in enumerate(users)])
+        user_list = "\n".join([f"{i + 1}. {user.name} {user.surname} | {user.organization_name} | {user.phone_number} | Роль: {user.role.value} | Уровень цен: {user.price_level.value} (ID: {user.user_id})" for i, user in enumerate(users)])
 
         max_message_length = 4096
         if len(user_list) > max_message_length:

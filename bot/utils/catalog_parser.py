@@ -8,8 +8,10 @@ async def add_products_from_excel():
     
     for index, row in df.iterrows():
         article_number = row['Исходный номер']
-        name = row['Наименование']
+        name = row['Наименование'] if not pd.isnull(row['Наименование']) else None
         amount = int(row['Наличие, шт.']) if not pd.isnull(row['Наличие, шт.']) else 0
+        image_link = row['Ссылка на фото 1'] if not pd.isnull(row['Ссылка на фото 1']) else None
+        type = row['Тип запчасти'] if not pd.isnull(row['Тип запчасти']) else None
         default_price = float(row['Розничная цена, руб.']) if not pd.isnull(row['Розничная цена, руб.']) else 0.0
         first_lvl_price = float(row['Уровень цен 1, руб.']) if not pd.isnull(row['Уровень цен 1, руб.']) else 0.0
         second_lvl_price = float(row['Уровень цен 2, руб.']) if not pd.isnull(row['Уровень цен 2, руб.']) else 0.0

@@ -82,12 +82,13 @@ async def process_category_selection(message: types.Message, state: FSMContext):
 @admin_router.message(StateFilter(AdminStates.waiting_for_all_users_confirmation))
 async def process_all_users_selection(message: types.Message, state: FSMContext):
     confirmation = message.text.strip().lower()
-    if confirmation == 'да':
+    if confirmation == 'Да':
         await state.update_data(all=confirmation)
         await message.answer('Введите новый уровень цен для всех пользователей', reply_markup=create_simple_inline_navigation())
         await state.set_state(AdminStates.waiting_for_price_selection)
-    await message.answer('Вы вернулись в админ-панель', reply_markup=create_admin_navigation())
-    await state.clear()
+    else:
+        await message.answer('Вы вернулись в админ-панель', reply_markup=create_admin_navigation())
+        await state.clear()
 
 @admin_router.message(StateFilter(AdminStates.waiting_for_price_selection))
 async def process_price_selection(message: types.Message, state: FSMContext):
