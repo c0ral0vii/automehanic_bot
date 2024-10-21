@@ -5,8 +5,8 @@ from aiogram.filters import StateFilter
 from database.models import PriceLevel
 from filters.chat_types import ChatTypeFilter, IsAdmin
 from keyboards.reply.admin_keyboard import create_admin_navigation, create_catalog_navigation
-from keyboards.inline.admin_keyboard import create_simple_inline_navigation
-from database.db_config import get_all_users, get_users_with_role_cancelled, get_users_with_role_user, get_users_with_role_undefined, update_user_price_level, update_user_role
+from keyboards.inline.admin_keyboard import create_simple_inline_navigation, create_user_list_keyboard
+from database.db_config import get_all_users, get_user, get_users_with_role_cancelled, get_users_with_role_user, get_users_with_role_undefined, update_user_price_level, update_user_role
 
 
 admin_router = Router(name="admin")
@@ -35,9 +35,23 @@ async def cancel_handler(callback_query: types.Message | types.CallbackQuery, st
     else:
         await callback_query.answer("Вы вернулись в админ-панель", reply_markup=keyboard)
 
+# @admin_router.message(F.text == "Поменять одному пользователю")
+# async def change_one_user_handler(message: types.Message, state: FSMContext):
+#     await message.answer("Введите ID пользователя, которому нужно поменять уровень.")
+#     await state.set_state(AdminStates.waiting_for_one_user_id)
+
 @admin_router.message(F.text == "Поменять одному пользователю")
 async def change_one_user_handler(message: types.Message, state: FSMContext):
-    await message.answer("Введите ID пользователя, которому нужно поменять уровень.")
+    users = await get_all_users()
+    total_users = len(users)
+    users_per_page = 5
+    total_pages = (total_users + users_per_page - 1) // users_per_page
+    current_page = 1
+
+    page_users = users[(current_page - 1) * users_per_page:current_page * users_per_page]
+    keyboard = create_user_list_keyboard(page_users, current_page, total_pages)
+
+    await message.answer("Выберите пользователя для изменения уровня цен:", reply_markup=keyboard)
     await state.set_state(AdminStates.waiting_for_one_user_id)
 
 @admin_router.message(F.text == "Поменять группе пользователей")
@@ -55,13 +69,56 @@ async def change_all_users_handler(message: types.Message, state: FSMContext):
     await message.answer("Вы уверены, что хотите поменять уровень для всех пользователей? Отправьте 'Да' для подтверждения.")
     await state.set_state(AdminStates.waiting_for_all_users_confirmation)
 
-@admin_router.message(StateFilter(AdminStates.waiting_for_one_user_id))
-async def process_one_user_id(message: types.Message, state: FSMContext):
-    user_id = message.text.strip()
+# @admin_router.message(StateFilter(AdminStates.waiting_for_one_user_id))
+# async def process_one_user_id(message: types.Message, state: FSMContext):
+#     user_id = message.text.strip()
+#     await state.update_data(user_id=user_id)
+
+
+
+#     await message.answer(f"Получен ID пользователя: {user_id}. Теперь введите новый уровень цен.", reply_markup=create_simple_inline_navigation())
+#     await state.set_state(AdminStates.waiting_for_price_selection)
+
+@admin_router.callback_query(lambda c: c.data.startswith("user_"), StateFilter(AdminStates.waiting_for_one_user_id))
+async def process_select_user(callback_query: types.CallbackQuery, state: FSMContext):
+    user_id = callback_query.data.split("_")[1]
+    user = await get_user(int(user_id))
     await state.update_data(user_id=user_id)
 
-    await message.answer(f"Получен ID пользователя: {user_id}. Теперь введите новый уровень цен.", reply_markup=create_simple_inline_navigation())
+    price_level_texts = {
+        'PriceLevel.DEFAULT': 'Розничный',
+        'PriceLevel.FIRST': 'Первый',
+        'PriceLevel.SECOND': 'Второй',
+        'PriceLevel.THIRD': 'Третий',
+        'PriceLevel.FOURTH': 'Четвертый',
+    }
+
+    user_info = (
+        f"📋 Информация о пользователе:\n"
+        f"🔹 Имя: {user.name}\n"
+        f"🔹 Фамилия: {user.surname}\n"
+        f"🔹 ID: {user.user_id}\n"
+        f"🔹 Текущий уровень цен: {price_level_texts[str(user.price_level)]}\n"
+        f"🔹 Дата регистрации: {user.created}\n"
+        f"\nПожалуйста, введите новый уровень цен (0-4)."
+    )
+
+    await callback_query.message.edit_text(user_info, reply_markup=create_simple_inline_navigation())
     await state.set_state(AdminStates.waiting_for_price_selection)
+
+@admin_router.callback_query(lambda c: c.data.startswith("page_"), StateFilter(AdminStates.waiting_for_one_user_id))
+async def paginate_user_list(callback_query: types.CallbackQuery, state: FSMContext):
+    current_page = int(callback_query.data.split("_")[1])
+
+    users = await get_all_users()
+    total_users = len(users)
+    users_per_page = 5
+    total_pages = (total_users + users_per_page - 1) // users_per_page
+
+    page_users = users[(current_page - 1) * users_per_page:current_page * users_per_page]
+
+    keyboard = create_user_list_keyboard(page_users, current_page, total_pages)
+    await callback_query.message.edit_reply_markup(reply_markup=keyboard)
 
 @admin_router.message(StateFilter(AdminStates.waiting_for_group_user_ids))
 async def process_group_user_ids(message: types.Message, state: FSMContext):
@@ -100,6 +157,8 @@ async def process_price_selection(message: types.Message, state: FSMContext):
         '3': PriceLevel.THIRD,
         '4': PriceLevel.FOURTH,
     }
+
+
 
     if price_level not in price_level_map:
         await message.answer("Пожалуйста, введите уровень цен от 0 до 4.")
@@ -157,4 +216,3 @@ async def process_price_selection(message: types.Message, state: FSMContext):
 
     await state.clear()
     await message.answer("Изменение уровня цен завершено.", reply_markup=create_admin_navigation())
-
