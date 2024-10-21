@@ -9,13 +9,15 @@ PDF_FOLDER = 'bot/utils/data/presentations'
 
 @presentation_router.message(StateFilter(None), F.text == '📑 Презентации по продукту')
 async def send_presentations(message: types.Message):
-    pdf_files = [f for f in os.listdir(PDF_FOLDER) if f.endswith('.pdf')]
+    try:
+        pdf_files = [f for f in os.listdir(PDF_FOLDER) if f.endswith('.pdf')]
 
-    buttons = [[InlineKeyboardButton(text=pdf, callback_data=pdf)] for pdf in pdf_files]
-    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+        buttons = [[InlineKeyboardButton(text=pdf, callback_data=pdf)] for pdf in pdf_files]
+        keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
 
-    await message.answer("Выберите презентацию:", reply_markup=keyboard)
-
+        await message.answer("Выберите презентацию:", reply_markup=keyboard)
+    except Exception as e:
+        await message.answer('Не удалось отправить презентации, повторите попытку')
 
 @presentation_router.callback_query(F.data.endswith('.pdf'))
 async def send_pdf(call: types.CallbackQuery):

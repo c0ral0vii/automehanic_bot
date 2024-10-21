@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from .models import *
 from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME  # ..config for catalog_parser.py
 from typing import List
+from utils.catalog_parser import add_products_from_excel
 
 DATABASE_URL = f'postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 
@@ -18,19 +19,23 @@ async def create_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+
 async def drop_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
+
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session() as session:
         yield session
+
 
 async def check_user_role(user_id: int):
     async with async_session() as session:
         result = await session.execute(select(User).where(User.user_id == user_id))
         existing_user = result.scalars().first()
         return existing_user.role if existing_user else None
+
 
 async def get_price_for_user(user_id: int, article_number: str):
     async with async_session() as session:
@@ -66,6 +71,7 @@ async def get_price_for_user(user_id: int, article_number: str):
 
             return None
 
+
 async def add_user(user_id: int, name: str, surname: str, organization_name: str, phone_number: str):
     async with async_session() as session:
         async with session.begin():
@@ -95,36 +101,35 @@ async def get_product(article: str):
             product = result.scalar_one_or_none()
             return product
 
-async def add_product(article_number: str, name: str, amount: int, default_price: float, first_lvl_price: float,
-                      second_lvl_price: float, third_lvl_price: float, fourth_lvl_price: float):
+async def add_product():
     async with async_session() as session:
         async with session.begin():
-            result = await session.execute(
-                select(Product).where(Product.article_number == article_number)
-            )
-            existing_product = result.scalar_one_or_none()
-
-            if existing_product:
-                return f"Продукт с артикулом {article_number} уже существует."
-
-            new_product = Product(
-                article_number=article_number,
-                name=name,
-                amount=amount,
-                default_price=default_price,
-                first_lvl_price=first_lvl_price,
-                second_lvl_price=second_lvl_price,
-                third_lvl_price=third_lvl_price,
-                fourth_lvl_price=fourth_lvl_price
-            )
-
             try:
-                session.add(new_product)
+                async for product in add_products_from_excel():
+                        
+                    result = await session.execute(
+                        select(Product).where(Product.article_number == product.get('article_number'))
+                    )
+                    existing_product = result.scalar_one_or_none()
+
+                    if existing_product:
+                        continue
+
+                    new_product = Product(
+                        article_number=product.get('article_number'),
+                        name=product.get('name'),
+                        amount=product.get('amount'),
+                        default_price=product.get('default_price'),
+                        first_lvl_price=product.get('first_lvl_price'),
+                        second_lvl_price=product.get('second_lvl_price'),
+                        third_lvl_price=product.get('third_lvl_price'),
+                        fourth_lvl_price=product.get('fourth_lvl_price')
+                    )
+                    session.add(new_product)
                 await session.commit()
-                return f"Продукт {name} с артикулом {article_number} успешно добавлен."
             except IntegrityError:
                 await session.rollback()
-                return f"Ошибка: не удалось добавить продукт {name}. Возможно, артикул уже существует."
+                return f"Ошибка: не удалось добавить продукт. Возможно, артикул уже существует."
 
 async def get_all_users() -> List[User]:
     async with async_session() as session:
