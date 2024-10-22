@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
@@ -36,15 +36,19 @@ async def check_user_role(user_id: int):
         existing_user = result.scalars().first()
         return existing_user.role if existing_user else None
 
-
-async def get_price_for_user(user_id: int, article_number: str):
+async def get_price_for_user(user_id: int, article_or_cross: str):
     async with async_session() as session:
         async with session.begin():
             result = await session.execute(select(User).where(User.user_id == user_id))
             existing_user = result.scalars().first()
 
             product_result = await session.execute(
-                select(Product).where(Product.article_number == article_number)
+                select(Product).where(
+                    or_(
+                        Product.article_number == article_or_cross,
+                        Product.cross_numbers.ilike(f"%{article_or_cross}%")
+                    )
+                )
             )
             product = product_result.scalar_one_or_none()
 
@@ -71,9 +75,6 @@ async def get_price_for_user(user_id: int, article_number: str):
 
             return None
 
-
-
-
 async def add_user(user_id: int, name: str, surname: str, organization_name: str, phone_number: str):
     async with async_session() as session:
         async with session.begin():
@@ -94,13 +95,19 @@ async def add_user(user_id: int, name: str, surname: str, organization_name: str
             await session.commit()
             return True
 
-async def get_product(article: str):
+async def get_product_by_article_or_cross_number(article_or_cross: str):
     async with async_session() as session:
         async with session.begin():
             result = await session.execute(
-                select(Product).where(Product.article_number == article)
+                select(Product).where(
+                    or_(
+                        Product.article_number == article_or_cross,
+                        Product.cross_numbers.ilike(f"%{article_or_cross}%")
+                    )
+                )
             )
             product = result.scalar_one_or_none()
+            print(product)
             return product
 
 async def add_product():
@@ -289,3 +296,67 @@ async def my_profile(user_id: int) -> tuple:
                 'organization': user.organization_name,
                 'role': 'Авторизован',
             }
+
+async def add_or_update_product_to_db(session: AsyncSession, product_data):
+    stmt = select(Product).filter_by(article_number=product_data['article_number'])
+    result = await session.execute(stmt)
+
+    existing_product = result.scalars().first()
+
+    if existing_product:
+        existing_product.name = product_data['name']
+        existing_product.amount = product_data['amount']
+        existing_product.default_price = product_data['default_price']
+        existing_product.first_lvl_price = product_data['first_lvl_price']
+        existing_product.second_lvl_price = product_data['second_lvl_price']
+        existing_product.third_lvl_price = product_data['third_lvl_price']
+        existing_product.fourth_lvl_price = product_data['fourth_lvl_price']
+        existing_product.brand = product_data['brand']
+        existing_product.product_group = product_data['product_group']
+        existing_product.part_type = product_data['part_type']
+        existing_product.photo_url_1 = product_data['photo_url_1']
+        existing_product.photo_url_2 = product_data['photo_url_2']
+        existing_product.photo_url_3 = product_data['photo_url_3']
+        existing_product.cross_numbers = product_data['cross_numbers']
+        existing_product.applicability_brands = product_data['applicability_brands']
+        existing_product.applicable_tech = product_data['applicable_tech']
+        existing_product.weight_kg = product_data['weight_kg']
+        existing_product.length_m = product_data['length_m']
+        existing_product.inner_diameter_mm = product_data['inner_diameter_mm']
+        existing_product.outer_diameter_mm = product_data['outer_diameter_mm']
+        existing_product.thread_diameter_mm = product_data['thread_diameter_mm']
+    else:
+        new_product = Product(
+            article_number=product_data['article_number'],
+            name=product_data['name'],
+            amount=product_data['amount'],
+            default_price=product_data['default_price'],
+            first_lvl_price=product_data['first_lvl_price'],
+            second_lvl_price=product_data['second_lvl_price'],
+            third_lvl_price=product_data['third_lvl_price'],
+            fourth_lvl_price=product_data['fourth_lvl_price'],
+            brand=product_data['brand'],
+            product_group=product_data['product_group'],
+            part_type=product_data['part_type'],
+            photo_url_1=product_data['photo_url_1'],
+            photo_url_2=product_data['photo_url_2'],
+            photo_url_3=product_data['photo_url_3'],
+            cross_numbers=product_data['cross_numbers'],
+            applicability_brands=product_data['applicability_brands'],
+            applicable_tech=product_data['applicable_tech'],
+            weight_kg=product_data['weight_kg'],
+            length_m=product_data['length_m'],
+            inner_diameter_mm=product_data['inner_diameter_mm'],
+            outer_diameter_mm=product_data['outer_diameter_mm'],
+            thread_diameter_mm=product_data['thread_diameter_mm'],
+        )
+        session.add(new_product)
+
+
+async def update_catalog():
+    async with async_session() as session:
+        async with session.begin():
+            async for product_data in add_products_from_excel():
+                await add_or_update_product_to_db(session, product_data)
+        await session.commit()
+

@@ -5,7 +5,7 @@ from aiogram.filters import StateFilter, Command
 from database.models import UserRole
 from filters.chat_types import ChatTypeFilter, IsAdmin
 from keyboards.reply.admin_keyboard import create_admin_navigation, create_auth_navigation
-from database.db_config import get_all_users, get_users_with_role_user, get_users_with_role_undefined, update_user_role, add_product
+from database.db_config import get_all_users, get_users_with_role_user, get_users_with_role_undefined, update_catalog, update_user_role
 from utils.send_message import notify_user
 
 
@@ -130,7 +130,9 @@ async def all_authenticated_users_handler(message: types.Message):
 @admin_router.message(StateFilter(None), F.text == '🔃Обновить каталог')
 async def reload_catalog(message: types.Message):
     try:
-        await add_product()
+        await update_catalog()
         await message.answer(f'Каталог обновлён✅')
     except FileNotFoundError:
         await message.answer(f'Возникла ошибка❌\nПоместите файл в bot/utils/data/catalog/data.xlsx')
+
+    #TO-DO: Работает для добавления данных в бд с нуля, но нет обновления, легко реализовать update_product() и так же

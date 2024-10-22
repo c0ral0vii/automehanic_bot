@@ -2,10 +2,11 @@ from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters import StateFilter, Command
-from database.db_config import get_product, get_price_for_user
-from keyboards.inline.catalog_keyboard import create_catalog_keyboard, create_product_keyboard, create_simple_inline_navigation
+from database.db_config import get_price_for_user, get_product_by_article_or_cross_number
+from keyboards.inline.catalog_keyboard import create_catalog_keyboard, create_more_info_keyboard, create_product_keyboard, create_product_only_order, create_simple_inline_navigation
 from keyboards.reply.main_keyboard import create_main_keyboard
 from utils.texts import get_greeting_text
+from aiogram.types import InputMediaPhoto
 from sqlalchemy.exc import NoResultFound
 from utils.send_email import send_order_email
 import pandas as pd
@@ -93,17 +94,18 @@ async def back_step_handler(callback_query: types.CallbackQuery | types.Message,
 async def process_article_input(message: types.Message, state: FSMContext):
     await state.update_data(article=message.text)
     data = await state.get_data()
-    article_number = data['article'].strip()
+    article_or_cross = data['article'].strip()
     user_id = message.from_user.id
+    await state.update_data(user_id=user_id)
 
     try:
-        price = await get_price_for_user(user_id, article_number)
+        price = await get_price_for_user(user_id, article_or_cross)
 
         if price is None:
             await message.answer("Товар не найден или цена недоступна.")
             return
 
-        product = await get_product(article_number)
+        product = await get_product_by_article_or_cross_number(article_or_cross)
 
         if product is not None:
             response_text = (
@@ -114,12 +116,68 @@ async def process_article_input(message: types.Message, state: FSMContext):
                 "Указанная цена может меняться в меньшую сторону в зависимости от суммы заказа и Вашего уровня цен. "
                 "После размещения заявки с Вами свяжется наш менеджер и уточнит все детали."
             )
-            keyboard = create_product_keyboard()
+            keyboard = create_more_info_keyboard()
             await message.answer(response_text, reply_markup=keyboard)
         else:
             await message.answer("Товар не найден. Пожалуйста, проверьте артикул и попробуйте снова.")
     except NoResultFound:
         await message.answer("Произошла ошибка при получении данных о товаре.")
+
+@catalog_router.callback_query(lambda c: c.data == "view_details")
+async def handle_view_details(callback_query: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    article_or_cross = data.get('article').strip()
+    user_id = data.get('user_id')
+
+    try:
+        price = await get_price_for_user(user_id, article_or_cross)
+
+        if price is None:
+            await callback_query.message.answer("Товар не найден или цена недоступна.")
+            return
+
+        product = await get_product_by_article_or_cross_number(article_or_cross)
+
+        if product is not None:
+            response_text = (
+                f"Артикул: {product.article_number}\n"
+                f"Название: {product.name}\n"
+                f"Наличие: {product.amount}\n"
+                f"Цена: {price}\n\n"
+                f"Бренд: {product.brand if product.brand is not None else '—'}\n"
+                f"Товарная группа: {product.product_group if product.product_group is not None else '—'}\n"
+                f"Тип запчасти: {product.part_type if product.part_type is not None else '—'}\n"
+                f"Применимость брендов: {product.applicability_brands if product.applicability_brands is not None else '—'}\n"
+                f"Применимая техника: {product.applicable_tech if product.applicable_tech is not None else '—'}\n"
+                f"Вес (кг): {product.weight_kg if product.weight_kg is not None else '—'}\n"
+                f"Длина (м): {product.length_m if product.length_m is not None else '—'}\n"
+                f"Внутренний диаметр (мм): {product.inner_diameter_mm if product.inner_diameter_mm is not None else '—'}\n"
+                f"Внешний диаметр (мм): {product.outer_diameter_mm if product.outer_diameter_mm is not None else '—'}\n"
+                f"Диаметр резьбы (мм): {product.thread_diameter_mm if product.thread_diameter_mm is not None else '—'}\n\n"
+                "Указанная цена может меняться в меньшую сторону в зависимости от суммы заказа и Вашего уровня цен. "
+                "После размещения заявки с Вами свяжется наш менеджер и уточнит все детали."
+            )
+
+
+            keyboard = create_product_only_order()
+            media = []
+            if product.photo_url_1:
+                media.append(InputMediaPhoto(media=product.photo_url_1))
+            if product.photo_url_2:
+                media.append(InputMediaPhoto(media=product.photo_url_2))
+            if product.photo_url_3:
+                media.append(InputMediaPhoto(media=product.photo_url_3))
+
+            if media:
+                await callback_query.message.bot.send_media_group(chat_id=callback_query.message.chat.id, media=media)
+
+            await callback_query.message.answer(response_text, reply_markup=keyboard)
+
+
+        else:
+            await callback_query.message.answer("Товар не найден. Пожалуйста, проверьте артикул и попробуйте снова.")
+    except NoResultFound:
+        await callback_query.message.answer("Произошла ошибка при получении данных о товаре.")
 
 @catalog_router.message(Form.multiple_articles, F.document)
 async def process_xlsx_file(message: types.Message, state: FSMContext):
@@ -130,17 +188,26 @@ async def process_xlsx_file(message: types.Message, state: FSMContext):
 
     try:
         df = pd.read_excel(file_path, header=None, engine='openpyxl')
-        df.columns = ['Артикул']
+        df.columns = ['Артикул', 'Кросс-номера']
 
         response = []
         user_id = message.from_user.id
 
         for index, row in df.iterrows():
-            article_number = str(row['Артикул']).strip()
-            price = await get_price_for_user(user_id, article_number)
+            article_or_cross = str(row['Артикул']).strip()
+            cross_numbers = str(row['Кросс-номера']).strip().split(';')
+            price = await get_price_for_user(user_id, article_or_cross)
 
-            product = await get_product(article_number)
-            if product and price:
+            if price is None:
+                for cross in cross_numbers:
+                    cross = cross.strip()
+                    price = await get_price_for_user(user_id, cross)
+                    if price is not None:
+                        break
+
+            product = await get_product_by_article_or_cross_number(article_or_cross)
+
+            if product and price is not None:
                 response.append(
                     f"Артикул: {product.article_number}\n"
                     f"Название: {product.name}\n"
@@ -148,13 +215,33 @@ async def process_xlsx_file(message: types.Message, state: FSMContext):
                     f"Цена: {price}\n\n"
                 )
             else:
-                response.append(f"Товар с артикулом {article_number} не найден.\n")
+                if not product:
+                    for cross in cross_numbers:
+                        cross = cross.strip()
+                        product = await get_product_by_article_or_cross_number(cross)
+                        if product:
+                            break
+
+                if product:
+                    response.append(
+                        f"Товар с кросс-номером {cross}:\n"
+                        f"Артикул: {product.article_number}\n"
+                        f"Название: {product.name}\n"
+                        f"Наличие: {product.amount}\n"
+                        f"Цена: {price}\n\n"
+                    )
+                else:
+                    response.append(f"Товар с артикулом {article_or_cross} и кросс-номерами не найден.\n")
 
         keyboard = create_product_keyboard()
         await message.answer(''.join(response), reply_markup=keyboard)
 
+    except FileNotFoundError:
+        await message.answer("Файл не найден. Пожалуйста, попробуйте снова.")
+    except ValueError as ve:
+        await message.answer(f"Ошибка формата файла: {str(ve)}. Убедитесь, что файл в формате Excel.")
     except Exception as e:
-        await message.answer(f"Произошла ошибка при обработке файла: {str(e)}.\nОтправьте файл заново.")
+        await message.answer(f"Произошла ошибка при обработке файла: {str(e)}. Отправьте файл заново.")
         await state.set_state(Form.multiple_articles)
 
 @catalog_router.message(Form.multiple_articles, F.text)
@@ -163,12 +250,12 @@ async def process_multiple_articles_input(message: types.Message, state: FSMCont
     response = []
     user_id = message.from_user.id
 
-    for article_number in articles_data:
-        article_number = article_number.strip()
-        if not article_number:
+    for article_or_cross in articles_data:
+        article_or_cross = article_or_cross.strip()
+        if not article_or_cross:
             continue
-        price = await get_price_for_user(user_id, article_number)
-        product = await get_product(article_number)
+        price = await get_price_for_user(user_id, article_or_cross)
+        product = await get_product_by_article_or_cross_number(article_or_cross)
         if product and price:
             response.append(
                 f"Артикул: {product.article_number}\n"
@@ -177,7 +264,7 @@ async def process_multiple_articles_input(message: types.Message, state: FSMCont
                 f"Цена: {price}\n\n"
             )
         else:
-            response.append(f"Товар с артикулом {article_number} не найден.\n")
+            response.append(f"Товар с артикулом {article_or_cross} не найден.\n")
 
     if not response:
         await message.answer("Не найдено ни одного товара по указанным артикулам.")
