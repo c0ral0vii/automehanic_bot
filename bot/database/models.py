@@ -46,5 +46,20 @@ class Product(Base):
     third_lvl_price: Mapped[PriceLevel] = mapped_column(Numeric(10, 2), nullable=True)
     fourth_lvl_price: Mapped[PriceLevel] = mapped_column(Numeric(10, 2), nullable=True)
 
+    brand: Mapped[str] = mapped_column(String(255), nullable=True)  # Бренд
+    product_group: Mapped[str] = mapped_column(String(255), nullable=True)  # Товарная группа
+    part_type: Mapped[str] = mapped_column(String(255), nullable=True)  # Тип запчасти
+    photo_url_1: Mapped[str] = mapped_column(String(500), nullable=True)  # Ссылка на фото 1
+    photo_url_2: Mapped[str] = mapped_column(String(500), nullable=True)  # Ссылка на фото 2
+    photo_url_3: Mapped[str] = mapped_column(String(500), nullable=True)  # Ссылка на фото 3
+    cross_numbers: Mapped[str] = mapped_column(Text, nullable=True)  # Кросс-номера
+    applicability_brands: Mapped[str] = mapped_column(Text, nullable=True)  # Бренды применимости
+    applicable_tech: Mapped[str] = mapped_column(String(255), nullable=True)  # Техника применимости
+    weight_kg: Mapped[str] = mapped_column(String(255), nullable=True)  # Вес, кг
+    length_m: Mapped[str] = mapped_column(String(255), nullable=True)  # Длина, м
+    inner_diameter_mm: Mapped[str] = mapped_column(String(255), nullable=True)  # Внутренний диаметр, мм
+    outer_diameter_mm: Mapped[str] = mapped_column(String(255), nullable=True)  # Внешний диаметр, мм
+    thread_diameter_mm: Mapped[str] = mapped_column(String(255), nullable=True)  # Диаметр резьбы
+
     def __repr__(self):
         return f"<Product(name='{self.name}', article_number='{self.article_number}')>"
