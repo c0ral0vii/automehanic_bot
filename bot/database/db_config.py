@@ -101,8 +101,9 @@ async def get_product(article: str):
                 select(Product).where(Product.article_number == article)
             )
             product = result.scalar_one_or_none()
-            return product
-
+            if product:
+                return product
+            raise ModuleNotFoundError
 async def add_product():
     async with async_session() as session:
         async with session.begin():

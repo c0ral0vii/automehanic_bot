@@ -119,6 +119,7 @@ async def paginate_user_list(callback_query: types.CallbackQuery, state: FSMCont
 
     keyboard = create_user_list_keyboard(page_users, current_page, total_pages)
     await callback_query.message.edit_reply_markup(reply_markup=keyboard)
+    
 
 @admin_router.message(StateFilter(AdminStates.waiting_for_group_user_ids))
 async def process_group_user_ids(message: types.Message, state: FSMContext):

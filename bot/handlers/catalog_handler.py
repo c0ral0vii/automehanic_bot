@@ -237,7 +237,7 @@ async def handle_order_request(callback_query: types.CallbackQuery, state: FSMCo
     await callback_query.message.answer(
         "Пожалуйста, введите артикулы и количество в следующем формате:\n\n"
         "- (артикул; количество)\n\n"
-        "Каждый новый артикул с новой строки, либо отправьте файл в формате Excel (Первый столбец - артикль, второй - количество, названия для столбцов не нужны).", reply_markup=keyboard
+        "Каждый новый артикул с новой строки, либо отправьте файл в формате Excel (Первый столбец - артикул, второй - количество, названия для столбцов не нужны).", reply_markup=keyboard
     )
     await state.set_state(Form.article_quantity_input)
 

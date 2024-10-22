@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres
+    container_name: db
     restart: always
     env_file:
       - .env
@@ -13,10 +14,12 @@ services:
 
   adminer:
     image: adminer
+    container_name: adminer
     ports:
       - "8080:8080"
 
   bot:
+    command: 'alembic rebase -m "create table" & alembic upgrade head'
     build: .
     depends_on:
       - db

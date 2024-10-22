@@ -8,6 +8,7 @@ async def add_products_from_excel():
     for index, row in df.iterrows():
         article_number = row['Исходный номер']
         name = row['Наименование']
+        cross_number = row['Кросс-номера'].split(';')
         amount = int(row['Наличие, шт.']) if not pd.isnull(row['Наличие, шт.']) else 0
         default_price = float(row['Розничная цена, руб.']) if not pd.isnull(row['Розничная цена, руб.']) else 0.0
         first_lvl_price = float(row['Уровень цен 1, руб.']) if not pd.isnull(row['Уровень цен 1, руб.']) else 0.0
@@ -17,6 +18,7 @@ async def add_products_from_excel():
 
         yield {
             'article_number': article_number,
+            'cross_numbers': cross_number,
             'name': name,
             'amount': amount,
             'default_price': default_price,

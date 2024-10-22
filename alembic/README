@@ -1,3 +1,1 @@
-Generic single-database configuration.
-
-<h1>alembic upgrade head</h1> 
+Generic single-database configuration with an async dbapi.

@@ -38,8 +38,9 @@ class Product(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     article_number: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    cross_numbers: Mapped[list] = mapped_column(String(100), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    amount: Mapped[int] = mapped_column(Integer)
+    amount: Mapped[int] = mapped_column(Integer)    
     default_price: Mapped[PriceLevel] = mapped_column(Numeric(10, 2), nullable=True)
     first_lvl_price: Mapped[PriceLevel] = mapped_column(Numeric(10, 2), nullable=True)
     second_lvl_price: Mapped[PriceLevel] = mapped_column(Numeric(10, 2), nullable=True)
