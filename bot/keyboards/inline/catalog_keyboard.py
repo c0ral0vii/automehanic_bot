@@ -21,6 +21,27 @@ def create_product_keyboard():
 
     return keyboard
 
+def create_product_only_order():
+    order_button = InlineKeyboardButton(text="Оформить заказ", callback_data="order_request")
+    back_button = InlineKeyboardButton(text="Назад", callback_data="back")
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [order_button, back_button]
+    ])
+
+    return keyboard
+
+def create_more_info_keyboard():
+    order_button = InlineKeyboardButton(text="Подробнее", callback_data="view_details")
+    back_button = InlineKeyboardButton(text="Назад", callback_data="back")
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [order_button],
+        [back_button]
+    ])
+
+    return keyboard
+
 def create_simple_inline_navigation():
     cancel_button = InlineKeyboardButton(text="Отмена", callback_data="cancel")
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
