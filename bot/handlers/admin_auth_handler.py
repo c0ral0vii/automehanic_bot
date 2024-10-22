@@ -5,7 +5,7 @@ from aiogram.filters import StateFilter, Command
 from database.models import UserRole
 from filters.chat_types import ChatTypeFilter, IsAdmin
 from keyboards.reply.admin_keyboard import create_admin_navigation, create_auth_navigation
-from database.db_config import get_all_users, get_users_with_role_user, get_users_with_role_undefined, update_user_role
+from database.db_config import get_all_users, get_users_with_role_user, get_users_with_role_undefined, update_user_role, add_product
 from utils.send_message import notify_user
 
 
@@ -58,12 +58,18 @@ async def all_requests_handler(message: types.Message):
     users = await get_users_with_role_undefined()
     if users:
         for i, user in enumerate(users):
-            user_info = f"{i + 1}. {user.name} {user.surname} | {user.organization_name} | {user.phone_number} (ID: {user.user_id})"
+            user_info = (
+                f"{i + 1}. {user.name} {user.surname}\n"
+                f"   Организация: {user.organization_name}\n"
+                f"   Телефон: {user.phone_number}\n"
+                f"   (ID: {user.user_id})"
+            )
+
             accept = InlineKeyboardButton(text="Принять", callback_data=f"accept_{user.user_id}")
             reject = InlineKeyboardButton(text="Отклонить", callback_data=f"reject_{user.user_id}")
 
             keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [accept], [reject]
+                [accept, reject]
             ])
             await message.answer(user_info, reply_markup=keyboard)
     else:
@@ -73,7 +79,16 @@ async def all_requests_handler(message: types.Message):
 async def all_users_handler(message: types.Message):
     users = await get_all_users()
     if users:
-        user_list = "\n".join([f"{i + 1}. {user.name} {user.surname} | {user.organization_name} | {user.phone_number} | Роль: {user.role} | Уровень цен: {user.price_level} (ID: {user.user_id})" for i, user in enumerate(users)])
+        user_list = "Список пользователей:\n\n"
+        user_list += "\n".join([
+            f"{i + 1}. {user.name} {user.surname}\n"
+            f"   Организация: {user.organization_name}\n"
+            f"   Телефон: {user.phone_number}\n"
+            f"   Роль: {'Администратор' if user.role == 'admin' else 'Пользователь' if user.role == 'user' else 'Неопределённый' if user.role == 'undefined' else 'Отменённый'}\n"
+            f"   Уровень цен: {'Первый' if user.price_level == 'first' else 'Второй' if user.price_level == 'second' else 'Третий' if user.price_level == 'third' else 'Четвёртый' if user.price_level == 'fourth' else 'Стандартный'}\n"
+            f"   (ID: {user.user_id})\n"
+            for i, user in enumerate(users)
+        ])
 
         max_message_length = 4096
         if len(user_list) > max_message_length:
@@ -81,15 +96,24 @@ async def all_users_handler(message: types.Message):
             for chunk in chunks:
                 await message.answer(chunk)
         else:
-            await message.answer(f"Все пользователи:\n{user_list}")
+            await message.answer(user_list)
     else:
         await message.answer("Нет зарегистрированных пользователей.")
+
 
 @admin_router.message(StateFilter(None), F.text == 'Все авторизованные пользователи')
 async def all_authenticated_users_handler(message: types.Message):
     users = await get_users_with_role_user()
     if users:
-        user_list = "\n".join([f"{i + 1}. {user.name} {user.surname} | {user.organization_name} | {user.phone_number} | Роль: {user.role} | Уровень цен: {user.price_level} (ID: {user.user_id})" for i, user in enumerate(users)])
+        user_list = "\n\n".join([
+            f"{i + 1}. {user.name} {user.surname}\n"
+            f"   Организация: {user.organization_name}\n"
+            f"   Телефон: {user.phone_number}\n"
+            f"   Роль: {'Администратор' if user.role == 'admin' else 'Пользователь' if user.role == 'user' else 'Неопределённый' if user.role == 'undefined' else 'Отменённый'}\n"
+            f"   Уровень цен: {'Первый' if user.price_level == 'first' else 'Второй' if user.price_level == 'second' else 'Третий' if user.price_level == 'third' else 'Четвёртый' if user.price_level == 'fourth' else 'Стандартный'}\n"
+            f"   (ID: {user.user_id})"
+            for i, user in enumerate(users)
+        ])
 
         max_message_length = 4096
         if len(user_list) > max_message_length:
@@ -97,7 +121,16 @@ async def all_authenticated_users_handler(message: types.Message):
             for chunk in chunks:
                 await message.answer(chunk)
         else:
-            await message.answer(f"Все авторизованные пользователи:\n{user_list}")
+            await message.answer(f"Все авторизованные пользователи:\n\n{user_list}")
     else:
         await message.answer("Нет авторизованных пользователей.")
 
+
+
+@admin_router.message(StateFilter(None), F.text == '🔃Обновить каталог')
+async def reload_catalog(message: types.Message):
+    try:
+        await add_product()
+        await message.answer(f'Каталог обновлён✅')
+    except FileNotFoundError:
+        await message.answer(f'Возникла ошибка❌\nПоместите файл в bot/utils/data/catalog/data.xlsx')
