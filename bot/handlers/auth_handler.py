@@ -6,26 +6,18 @@ from database.db_config import add_user, check_user_role
 from utils.validation import validate_phone_number
 from keyboards.reply.main_keyboard import create_main_keyboard
 from keyboards.inline.auth_keyboard import create_inline_navigation_keyboard
+from fsm.auth_fsm import AuthForm
+from filters.excluded_message import ExcludedMessage
+
 
 auth_router = Router(name="auth")
-
-class AuthForm(StatesGroup):
-    name = State()
-    surname = State()
-    organization_name = State()
-    phone_number = State()
-
-    texts = {
-        'AuthForm:name': 'Введите имя заново:',
-        'AuthForm:surname': 'Введите фамилию заново:',
-        'AuthForm:organization_name': 'Введите организацию заново:',
-        'AuthForm:phone_number': 'Этот стейт последний, поэтому...',
-    }
-
+auth_router.message.filter(ExcludedMessage())
 
 @auth_router.message(StateFilter(None), F.text == '🔐 Авторизоваться')
 async def auth_handler(message: types.Message, state: FSMContext):
-    await message.answer("Введите ваше имя:")
+    keyboard = create_inline_navigation_keyboard()
+
+    await message.answer("Введите ваше имя:", reply_markup=keyboard)
     await state.set_state(AuthForm.name)
 
 @auth_router.callback_query(lambda c: c.data == "cancel", StateFilter(AuthForm))

@@ -3,9 +3,9 @@ from sqlalchemy.exc import IntegrityError
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from .models import *
-from bot.config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME
+from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME
 from typing import List
-from bot.utils.catalog_parser import add_products_from_excel
+from utils.catalog_parser import add_products_from_excel
 
 DATABASE_URL = f'postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 

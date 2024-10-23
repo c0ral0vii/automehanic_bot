@@ -11,15 +11,18 @@ services:
       POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
+    networks:
+      - app-network
 
   adminer:
     image: adminer
     container_name: adminer
     ports:
       - "8080:8080"
+    networks:
+      - app-network
 
   bot:
-    command: 'alembic rebase -m "create table" & alembic upgrade head'
     build: .
     depends_on:
       - db
@@ -28,3 +31,8 @@ services:
       - 80:80
     volumes:
       - .:/app
+    networks:
+      - app-network
+
+networks:
+  app-network:

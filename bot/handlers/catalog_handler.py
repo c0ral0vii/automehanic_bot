@@ -1,6 +1,5 @@
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters import StateFilter, Command
 from database.db_config import get_price_for_user, get_product_by_article_or_cross_number
 from keyboards.inline.catalog_keyboard import create_catalog_keyboard, create_more_info_keyboard, create_product_keyboard, create_product_only_order, create_simple_inline_navigation
@@ -9,28 +8,19 @@ from utils.texts import get_greeting_text
 from aiogram.types import InputMediaPhoto
 from sqlalchemy.exc import NoResultFound
 from utils.send_email import send_order_email
+from filters.excluded_message import ExcludedMessage
+from fsm.catalog_fsm import Form
 import pandas as pd
 
 catalog_router = Router(name="catalog")
+catalog_router.message.filter(ExcludedMessage())
+
 
 @catalog_router.message(StateFilter(None), F.text == '📦 Каталог')
 async def catalog_handler(message: types.Message):
     text = get_greeting_text()
     keyboard = create_catalog_keyboard()
     await message.answer(text, reply_markup=keyboard)
-
-class Form(StatesGroup):
-    article = State()
-    multiple_articles = State()
-    article_quantity_input = State()
-    contact_info = State()
-
-    texts = {
-        'Form.article': 'Введите артикул заново:',
-        'Form.multiple_articles': 'Для обработки списка артикулов, пришлите файл в формате Excel, или через сообщение в таком формате:\n\nФормат: артикул (в столбик)',
-        'Form.article_quantity_input': 'Введите артикулы и количество в формате: (артикул; количество)',
-        'Form.contact_info': 'Пожалуйста, укажите ваши контактные данные: ФИО и номер телефона в формате (ФИО, номер телефона), чтобы менеджер мог уточнить информацию по заказу.'
-    }
 
 
 @catalog_router.callback_query(lambda c: c.data == "request_single_article")
@@ -90,7 +80,8 @@ async def back_step_handler(callback_query: types.CallbackQuery | types.Message,
             return
         previous = step
 
-@catalog_router.message(Form.article, F.text)
+
+@catalog_router.message(Form.article, F.text )
 async def process_article_input(message: types.Message, state: FSMContext):
     await state.update_data(article=message.text)
     data = await state.get_data()
