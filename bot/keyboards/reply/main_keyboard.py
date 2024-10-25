@@ -1,5 +1,6 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
+
 def create_main_keyboard(auth: bool = False):
     if auth:
         button_auth = KeyboardButton(text='👨‍🦱Мой профиль')
@@ -11,9 +12,9 @@ def create_main_keyboard(auth: bool = False):
 
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
-            [button_auth],
-            [button_presentations, button_catalog],
-            [button_contact],
+            [button_catalog],
+            [button_presentations],
+            [button_contact, button_auth],
         ],
         resize_keyboard=True
     )

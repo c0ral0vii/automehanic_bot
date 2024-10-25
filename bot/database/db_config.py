@@ -3,6 +3,8 @@ from sqlalchemy.exc import IntegrityError
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from .models import *
+import sys
+sys.path.append('/app/bot/')
 from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME
 from typing import List
 from utils.catalog_parser import add_products_from_excel
@@ -316,6 +318,7 @@ async def add_or_update_product_to_db(session: AsyncSession, product_data):
         existing_product.photo_url_1 = product_data['photo_url_1']
         existing_product.photo_url_2 = product_data['photo_url_2']
         existing_product.photo_url_3 = product_data['photo_url_3']
+        existing_product.photo_url_4 = product_data['photo_url_4']
         existing_product.cross_numbers = product_data['cross_numbers']
         existing_product.applicability_brands = product_data['applicability_brands']
         existing_product.applicable_tech = product_data['applicable_tech']
@@ -340,6 +343,7 @@ async def add_or_update_product_to_db(session: AsyncSession, product_data):
             photo_url_1=product_data['photo_url_1'],
             photo_url_2=product_data['photo_url_2'],
             photo_url_3=product_data['photo_url_3'],
+            photo_url_4=product_data['photo_url_4'],
             cross_numbers=product_data['cross_numbers'],
             applicability_brands=product_data['applicability_brands'],
             applicable_tech=product_data['applicable_tech'],
@@ -348,6 +352,8 @@ async def add_or_update_product_to_db(session: AsyncSession, product_data):
             inner_diameter_mm=product_data['inner_diameter_mm'],
             outer_diameter_mm=product_data['outer_diameter_mm'],
             thread_diameter_mm=product_data['thread_diameter_mm'],
+            width_m=product_data['width_m'],
+            height_m=product_data['height_m']
         )
         session.add(new_product)
 

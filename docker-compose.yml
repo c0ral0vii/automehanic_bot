@@ -27,12 +27,13 @@ services:
     depends_on:
       - db
     container_name: telegram_bot
-    ports:
-      - 80:80
     volumes:
       - .:/app
+    ports:
+      - 80:80
     networks:
       - app-network
+
 
 networks:
   app-network:

@@ -1,3 +1,4 @@
+from typing import Text
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter, Command
@@ -9,18 +10,22 @@ from aiogram.types import InputMediaPhoto
 from sqlalchemy.exc import NoResultFound
 from utils.send_email import send_order_email
 from filters.excluded_message import ExcludedMessage
+from keyboards.reply.cancel_keyboard import create_cancel_keyboard
 from fsm.catalog_fsm import Form
 import pandas as pd
 
 catalog_router = Router(name="catalog")
-catalog_router.message.filter(ExcludedMessage())
+# catalog_router.message.filter(ExcludedMessage())
 
 
 @catalog_router.message(StateFilter(None), F.text == '📦 Каталог')
 async def catalog_handler(message: types.Message):
     text = get_greeting_text()
-    keyboard = create_catalog_keyboard()
-    await message.answer(text, reply_markup=keyboard)
+    inline_keyboard = create_catalog_keyboard()
+    reply_keyboard = create_cancel_keyboard()
+    
+    await message.answer(text, reply_markup=inline_keyboard)
+    await message.answer(text='Вернуться в меню —> «Назад».',reply_markup=reply_keyboard)
 
 
 @catalog_router.callback_query(lambda c: c.data == "request_single_article")
@@ -30,15 +35,18 @@ async def handle_single_article_request(callback_query: types.CallbackQuery, sta
 
 @catalog_router.callback_query(lambda c: c.data == "request_multiple_articles")
 async def handle_multiple_articles_request(callback_query: types.CallbackQuery, state: FSMContext):
-    await callback_query.message.answer("Для обработки списка артикулов, пришлите файл в формате Excel (Первый столбец - артикул, название для столбца не нужно), или через сообщение в таком формате:\nФормат: артикул (в столбик)")
+    keyboard = create_simple_inline_navigation()
+
+    await callback_query.message.answer("Для обработки списка артикулов, пришлите файл в формате Excel (Первый столбец - артикул, название для столбца не нужно), или через сообщение в таком формате:\nФормат: артикул (в столбик)", reply_markup=keyboard)
     await state.set_state(Form.multiple_articles)
 
-@catalog_router.callback_query(lambda c: c.data == "cancel", StateFilter(Form))
-@catalog_router.message(Command("cancel"), StateFilter(Form))
+@catalog_router.callback_query(lambda c: c.data == "cancel")
+@catalog_router.message(Command('cancel'))
+@catalog_router.message(F.text == 'Назад')
 async def cancel_handler(callback_query: types.CallbackQuery | types.Message, state: FSMContext) -> None:
     current_state = await state.get_state()
-    if current_state is None:
-        return
+    # if current_state is None:
+    #     return
 
     await state.clear()
     keyboard = create_main_keyboard()
@@ -62,6 +70,7 @@ async def back_step_handler(callback_query: types.CallbackQuery | types.Message,
         return
 
     if current_state == Form.multiple_articles:
+        keyboard = create_simple_inline_navigation()
         if isinstance(callback_query, types.CallbackQuery):
             await callback_query.message.answer("Для обработки списка артикулов, пришлите файл в формате Excel (Первый столбец - артикул, название для столбца не нужно)," \
                                          " или через сообщение в таком формате: Формат: артикул (в столбик)", reply_markup=keyboard)
@@ -81,19 +90,19 @@ async def back_step_handler(callback_query: types.CallbackQuery | types.Message,
         previous = step
 
 
-@catalog_router.message(Form.article, F.text )
+@catalog_router.message(Form.article, F.text)
 async def process_article_input(message: types.Message, state: FSMContext):
     await state.update_data(article=message.text)
     data = await state.get_data()
     article_or_cross = data['article'].strip()
     user_id = message.from_user.id
     await state.update_data(user_id=user_id)
-
+    keyboard = create_simple_inline_navigation()
     try:
         price = await get_price_for_user(user_id, article_or_cross)
 
         if price is None:
-            await message.answer("Товар не найден или цена недоступна.")
+            await message.answer("Товар не найден или цена недоступна.", reply_markup=keyboard)
             return
 
         product = await get_product_by_article_or_cross_number(article_or_cross)
@@ -119,12 +128,12 @@ async def handle_view_details(callback_query: types.CallbackQuery, state: FSMCon
     data = await state.get_data()
     article_or_cross = data.get('article').strip()
     user_id = data.get('user_id')
-
+    keyboard = create_simple_inline_navigation()
     try:
         price = await get_price_for_user(user_id, article_or_cross)
 
         if price is None:
-            await callback_query.message.answer("Товар не найден или цена недоступна.")
+            await callback_query.message.answer("Товар не найден или цена недоступна.", reply_markup=keyboard)
             return
 
         product = await get_product_by_article_or_cross_number(article_or_cross)
@@ -136,15 +145,18 @@ async def handle_view_details(callback_query: types.CallbackQuery, state: FSMCon
                 f"Наличие: {product.amount}\n"
                 f"Цена: {price}\n\n"
                 f"Бренд: {product.brand if product.brand is not None else '—'}\n"
-                f"Товарная группа: {product.product_group if product.product_group is not None else '—'}\n"
-                f"Тип запчасти: {product.part_type if product.part_type is not None else '—'}\n"
-                f"Применимость брендов: {product.applicability_brands if product.applicability_brands is not None else '—'}\n"
-                f"Применимая техника: {product.applicable_tech if product.applicable_tech is not None else '—'}\n"
+                # f"Товарная группа: {product.product_group if product.product_group is not None else '—'}\n"
+                # f"Тип запчасти: {product.part_type if product.part_type is not None else '—'}\n"
+                f"Кросс-номера: {product.cross_numbers if product.cross_numbers is not None else '—'}\n"
+                f"Техника: {product.applicable_tech if product.applicable_tech is not None else '—'}\n"
                 f"Вес (кг): {product.weight_kg if product.weight_kg is not None else '—'}\n"
                 f"Длина (м): {product.length_m if product.length_m is not None else '—'}\n"
+                f"Ширина (м): {product.width_m if product.width_m is not None else '—'}\n"
+                f"Высота (м): {product.height_m if product.height_m is not None else '—'}\n"
                 f"Внутренний диаметр (мм): {product.inner_diameter_mm if product.inner_diameter_mm is not None else '—'}\n"
                 f"Внешний диаметр (мм): {product.outer_diameter_mm if product.outer_diameter_mm is not None else '—'}\n"
                 f"Диаметр резьбы (мм): {product.thread_diameter_mm if product.thread_diameter_mm is not None else '—'}\n\n"
+
                 "Указанная цена может меняться в меньшую сторону в зависимости от суммы заказа и Вашего уровня цен. "
                 "После размещения заявки с Вами свяжется наш менеджер и уточнит все детали."
             )
@@ -158,6 +170,8 @@ async def handle_view_details(callback_query: types.CallbackQuery, state: FSMCon
                 media.append(InputMediaPhoto(media=product.photo_url_2))
             if product.photo_url_3:
                 media.append(InputMediaPhoto(media=product.photo_url_3))
+            if product.photo_url_4:
+                media.append(InputMediaPhoto(media=product.photo_url_4))
 
             if media:
                 await callback_query.message.bot.send_media_group(chat_id=callback_query.message.chat.id, media=media)
@@ -169,6 +183,7 @@ async def handle_view_details(callback_query: types.CallbackQuery, state: FSMCon
             await callback_query.message.answer("Товар не найден. Пожалуйста, проверьте артикул и попробуйте снова.")
     except NoResultFound:
         await callback_query.message.answer("Произошла ошибка при получении данных о товаре.")
+
 
 @catalog_router.message(Form.multiple_articles, F.document)
 async def process_xlsx_file(message: types.Message, state: FSMContext):
@@ -280,9 +295,11 @@ async def process_article_quantity_text_input(message: types.Message, state: FSM
             return
 
     await state.update_data(orders=orders)
-    keyboard = create_main_keyboard()
-    await message.answer("Ваш заказ находится в обработке. Пожалуйста, укажите ваши контактные данные: ФИО и номер телефона в формате (ФИО, номер телефона), чтобы менеджер мог уточнить информацию по заказу.", reply_markup=keyboard)
+    # keyboard = create_main_keyboard()
+    await message.answer("Ваш заказ находится в обработке. Пожалуйста, укажите ваши контактные данные: ФИО и номер телефона в формате (ФИО, номер телефона), чтобы менеджер мог уточнить информацию по заказу. \
+А также комментарии по заказу в случае необходимости.")
     await state.set_state(Form.contact_info)
+
 
 @catalog_router.message(Form.article_quantity_input, F.document)
 async def process_article_quantity_xlsx_input(message: types.Message, state: FSMContext):
@@ -302,7 +319,8 @@ async def process_article_quantity_xlsx_input(message: types.Message, state: FSM
 
         await state.update_data(orders=orders)
         keyboard = create_main_keyboard()
-        await message.answer("Ваш заказ находится в обработке. Пожалуйста, укажите ваши контактные данные: ФИО и номер телефона в формате (ФИО, номер телефона), чтобы менеджер мог уточнить информацию по заказу.", reply_markup=keyboard)
+        await message.answer("Ваш заказ находится в обработке. Пожалуйста, укажите ваши контактные данные: ФИО и номер телефона в формате (ФИО, номер телефона), чтобы менеджер мог уточнить информацию по заказу. \
+А также комментарии по заказу в случае необходимости.", reply_markup=keyboard)
         await state.set_state(Form.contact_info)
 
     except Exception as e:

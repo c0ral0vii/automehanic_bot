@@ -4,8 +4,9 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.filters import StateFilter, Command
 from database.models import UserRole
 from filters.chat_types import ChatTypeFilter, IsAdmin
+from database.models import PriceLevel
 from keyboards.reply.admin_keyboard import create_admin_navigation, create_auth_navigation
-from database.db_config import get_all_users, get_users_with_role_user, get_users_with_role_undefined, update_catalog, update_user_role
+from database.db_config import get_all_users, get_users_with_role_user, get_users_with_role_undefined, update_catalog, update_user_role, update_user_price_level
 from utils.send_message import notify_user
 
 
@@ -26,8 +27,15 @@ async def cancel_handler(message: types.Message, state: FSMContext) -> None:
 
 @admin_router.callback_query(lambda cb: cb.data.startswith('accept_'))
 async def accept_request(callback_query: types.CallbackQuery):
+    price_level_map = {
+        '1': PriceLevel.FIRST,
+    }
+
+    selected_price_level = price_level_map['1']
+
     user_id = int(callback_query.data.split('_')[1])
     await update_user_role(user_id, UserRole.USER)
+    await update_user_price_level(int(user_id), selected_price_level)
     await callback_query.answer("Запрос принят.")
     await callback_query.message.delete()
     welcome_message = (
@@ -124,7 +132,6 @@ async def all_authenticated_users_handler(message: types.Message):
             await message.answer(f"Все авторизованные пользователи:\n\n{user_list}")
     else:
         await message.answer("Нет авторизованных пользователей.")
-
 
 
 @admin_router.message(StateFilter(None), F.text == '🔃Обновить каталог')

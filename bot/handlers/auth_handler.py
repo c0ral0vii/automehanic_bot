@@ -6,26 +6,29 @@ from database.db_config import add_user, check_user_role
 from utils.validation import validate_phone_number
 from keyboards.reply.main_keyboard import create_main_keyboard
 from keyboards.inline.auth_keyboard import create_inline_navigation_keyboard
+from keyboards.reply.cancel_keyboard import create_cancel_keyboard
 from fsm.auth_fsm import AuthForm
 from filters.excluded_message import ExcludedMessage
 
 
 auth_router = Router(name="auth")
-auth_router.message.filter(ExcludedMessage())
+# auth_router.message.filter(ExcludedMessage())
 
 @auth_router.message(StateFilter(None), F.text == '🔐 Авторизоваться')
 async def auth_handler(message: types.Message, state: FSMContext):
-    keyboard = create_inline_navigation_keyboard()
-
-    await message.answer("Введите ваше имя:", reply_markup=keyboard)
+    inline_keyboard = create_inline_navigation_keyboard()
+    reply_keyboard = create_cancel_keyboard()
+    await message.answer("Вернуться в меню —> «Назад».", reply_markup=reply_keyboard)
+    await message.answer("Введите ваше имя:", reply_markup=inline_keyboard)
     await state.set_state(AuthForm.name)
 
-@auth_router.callback_query(lambda c: c.data == "cancel", StateFilter(AuthForm))
-@auth_router.message(Command("cancel"), StateFilter(AuthForm))
+@auth_router.callback_query(lambda c: c.data == "cancel",)
+@auth_router.message(Command("cancel"))
+@auth_router.message(F.text == 'Назад')
 async def cancel_handler(callback_query: types.CallbackQuery | types.Message, state: FSMContext) -> None:
     current_state = await state.get_state()
-    if current_state is None:
-        return
+    # if current_state is None:
+    #     return
 
     await state.clear()
 
@@ -110,9 +113,10 @@ async def process_phone_number(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
 
     user_role = await check_user_role(user_id)
+    keyboard = create_main_keyboard()
 
     if user_role == 'user':
-        await message.answer("Вы уже авторизовались.")
+        await message.answer("Вы уже авторизовались.", reply_markup=keyboard)
         await state.clear()
         return
 
@@ -125,9 +129,9 @@ async def process_phone_number(message: types.Message, state: FSMContext):
     )
 
     if user_added:
-        await message.answer("Спасибо за запрос на авторизацию! Ваше сообщение отправлено, администратор скоро его обработает. Ожидайте подтверждение.")
+        await message.answer("Спасибо за запрос на авторизацию! Ваше сообщение отправлено, администратор скоро его обработает. Ожидайте подтверждения.", reply_markup=keyboard)
     else:
-        await message.answer("Ваша заявка уже находиться на рассмотрении у модераторов")
+        await message.answer("Ваша заявка уже находиться на рассмотрении у модераторов", reply_markup=keyboard)
 
     await state.clear()
 

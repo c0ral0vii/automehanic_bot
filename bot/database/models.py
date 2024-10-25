@@ -40,12 +40,13 @@ class Product(Base):
     article_number: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     cross_numbers: Mapped[list] = mapped_column(String(100), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    amount: Mapped[int] = mapped_column(Integer)    
-    default_price: Mapped[PriceLevel] = mapped_column(Numeric(10, 2), nullable=True)
-    first_lvl_price: Mapped[PriceLevel] = mapped_column(Numeric(10, 2), nullable=True)
-    second_lvl_price: Mapped[PriceLevel] = mapped_column(Numeric(10, 2), nullable=True)
-    third_lvl_price: Mapped[PriceLevel] = mapped_column(Numeric(10, 2), nullable=True)
-    fourth_lvl_price: Mapped[PriceLevel] = mapped_column(Numeric(10, 2), nullable=True)
+    amount: Mapped[str] = mapped_column(Text)    
+    default_price: Mapped[str] = mapped_column(Text, nullable=True)
+    first_lvl_price: Mapped[str] = mapped_column(Text, nullable=True)
+    second_lvl_price: Mapped[str] = mapped_column(Text, nullable=True)
+    third_lvl_price: Mapped[str] = mapped_column(Text, nullable=True)
+    fourth_lvl_price: Mapped[str] = mapped_column(Text, nullable=True)
+    
 
     brand: Mapped[str] = mapped_column(String(255), nullable=True)  # Бренд
     product_group: Mapped[str] = mapped_column(String(255), nullable=True)  # Товарная группа
@@ -53,6 +54,7 @@ class Product(Base):
     photo_url_1: Mapped[str] = mapped_column(String(500), nullable=True)  # Ссылка на фото 1
     photo_url_2: Mapped[str] = mapped_column(String(500), nullable=True)  # Ссылка на фото 2
     photo_url_3: Mapped[str] = mapped_column(String(500), nullable=True)  # Ссылка на фото 3
+    photo_url_4: Mapped[str] = mapped_column(String(500), nullable=True)  # Ссылка на фото 3
     cross_numbers: Mapped[str] = mapped_column(Text, nullable=True)  # Кросс-номера
     applicability_brands: Mapped[str] = mapped_column(Text, nullable=True)  # Бренды применимости
     applicable_tech: Mapped[str] = mapped_column(String(255), nullable=True)  # Техника применимости
@@ -61,6 +63,8 @@ class Product(Base):
     inner_diameter_mm: Mapped[str] = mapped_column(String(255), nullable=True)  # Внутренний диаметр, мм
     outer_diameter_mm: Mapped[str] = mapped_column(String(255), nullable=True)  # Внешний диаметр, мм
     thread_diameter_mm: Mapped[str] = mapped_column(String(255), nullable=True)  # Диаметр резьбы
+    width_m: Mapped[str] = mapped_column(String(255), nullable=True) # Ширина
+    height_m: Mapped[str] = mapped_column(String(255), nullable=True) # Высота
 
     def __repr__(self):
         return f"<Product(name='{self.name}', article_number='{self.article_number}')>"

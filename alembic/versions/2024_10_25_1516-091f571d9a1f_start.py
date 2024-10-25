@@ -1,8 +1,8 @@
-"""create table
+"""start
 
-Revision ID: df96003c688f
+Revision ID: 091f571d9a1f
 Revises: 
-Create Date: 2024-10-22 23:07:49.982430
+Create Date: 2024-10-25 15:16:45.166127
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'df96003c688f'
+revision: str = '091f571d9a1f'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,18 +25,19 @@ def upgrade() -> None:
     sa.Column('article_number', sa.String(length=100), nullable=False),
     sa.Column('cross_numbers', sa.Text(), nullable=True),
     sa.Column('name', sa.String(length=255), nullable=False),
-    sa.Column('amount', sa.Integer(), nullable=False),
-    sa.Column('default_price', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('first_lvl_price', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('second_lvl_price', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('third_lvl_price', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('fourth_lvl_price', sa.Numeric(precision=10, scale=2), nullable=True),
+    sa.Column('amount', sa.Text(), nullable=False),
+    sa.Column('default_price', sa.Text(), nullable=True),
+    sa.Column('first_lvl_price', sa.Text(), nullable=True),
+    sa.Column('second_lvl_price', sa.Text(), nullable=True),
+    sa.Column('third_lvl_price', sa.Text(), nullable=True),
+    sa.Column('fourth_lvl_price', sa.Text(), nullable=True),
     sa.Column('brand', sa.String(length=255), nullable=True),
     sa.Column('product_group', sa.String(length=255), nullable=True),
     sa.Column('part_type', sa.String(length=255), nullable=True),
     sa.Column('photo_url_1', sa.String(length=500), nullable=True),
     sa.Column('photo_url_2', sa.String(length=500), nullable=True),
     sa.Column('photo_url_3', sa.String(length=500), nullable=True),
+    sa.Column('photo_url_4', sa.String(length=500), nullable=True),
     sa.Column('applicability_brands', sa.Text(), nullable=True),
     sa.Column('applicable_tech', sa.String(length=255), nullable=True),
     sa.Column('weight_kg', sa.String(length=255), nullable=True),
@@ -44,6 +45,8 @@ def upgrade() -> None:
     sa.Column('inner_diameter_mm', sa.String(length=255), nullable=True),
     sa.Column('outer_diameter_mm', sa.String(length=255), nullable=True),
     sa.Column('thread_diameter_mm', sa.String(length=255), nullable=True),
+    sa.Column('width_m', sa.String(length=255), nullable=True),
+    sa.Column('height_m', sa.String(length=255), nullable=True),
     sa.Column('created', sa.DateTime(), nullable=False),
     sa.Column('updated', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
