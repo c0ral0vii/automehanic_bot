@@ -5,10 +5,10 @@ WORKDIR /app
 
 ENV PATH="/venv/bin:$PATH"
 
-COPY . /app
 
 COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r ./requirements.txt
 
+COPY . /app
 
 CMD ["sh", "-c", "alembic revision --autogenerate -m 'start' && alembic upgrade head && python bot/main.py"]

@@ -1,5 +1,5 @@
 from typing import Text
-from aiogram import Router, types, F
+from aiogram import Router, types, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter, Command
 from database.db_config import get_price_for_user, get_product_by_article_or_cross_number
@@ -24,9 +24,10 @@ async def catalog_handler(message: types.Message):
     inline_keyboard = create_catalog_keyboard()
     reply_keyboard = create_cancel_keyboard()
     
+    await message.answer('''Приветствую! 👋  
+Я – бот-помощник MARSHALL.OFF-HIGHWAY 🚜.  
+Здесь вы найдете качественные запчасти от бренда MARSHALL для строительной и сельскохозяйственной техники в наличии и под заказ 🛠.''',reply_markup=reply_keyboard)
     await message.answer(text, reply_markup=inline_keyboard)
-    await message.answer(text='Вернуться в меню —> «Назад».',reply_markup=reply_keyboard)
-
 
 @catalog_router.callback_query(lambda c: c.data == "request_single_article")
 async def handle_single_article_request(callback_query: types.CallbackQuery, state: FSMContext):
