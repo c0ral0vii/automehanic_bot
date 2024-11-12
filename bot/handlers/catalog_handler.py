@@ -289,7 +289,7 @@ async def process_article_quantity_text_input(message: types.Message, state: FSM
             article, quantity = item.split(';')
             orders.append({
                 'article': article.strip(),
-                'quantity': int(quantity.strip())
+                'quantity': int(quantity.strip())   
             })
         except ValueError:
             await message.answer("Ошибка формата. Пожалуйста, введите артикулы и количество в формате: (артикул; количество)")
