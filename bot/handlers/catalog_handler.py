@@ -195,22 +195,21 @@ async def process_xlsx_file(message: types.Message, state: FSMContext):
 
     try:
         df = pd.read_excel(file_path, header=None, engine='openpyxl')
-        df.columns = ['Артикул', 'Кросс-номера']
+        try:
+            df.columns = ["Артикул", "Количество"]
+        except Exception as e:
+            df.columns = ['Артикул']
 
         response = []
         user_id = message.from_user.id
 
         for index, row in df.iterrows():
             article_or_cross = str(row['Артикул']).strip()
-            cross_numbers = str(row['Кросс-номера']).strip().split(';')
-            price = await get_price_for_user(user_id, article_or_cross)
+            count = row.get("Количество", 1)
 
-            if price is None:
-                for cross in cross_numbers:
-                    cross = cross.strip()
-                    price = await get_price_for_user(user_id, cross)
-                    if price is not None:
-                        break
+            price = await get_price_for_user(user_id, article_or_cross)
+            if count:
+                price = float(price)*int(count)
 
             product = await get_product_by_article_or_cross_number(article_or_cross)
 
@@ -221,24 +220,10 @@ async def process_xlsx_file(message: types.Message, state: FSMContext):
                     f"Наличие: {product.amount}\n"
                     f"Цена: {price}\n\n"
                 )
-            else:
-                if not product:
-                    for cross in cross_numbers:
-                        cross = cross.strip()
-                        product = await get_product_by_article_or_cross_number(cross)
-                        if product:
-                            break
 
-                if product:
-                    response.append(
-                        f"Товар с кросс-номером {cross}:\n"
-                        f"Артикул: {product.article_number}\n"
-                        f"Название: {product.name}\n"
-                        f"Наличие: {product.amount}\n"
-                        f"Цена: {price}\n\n"
-                    )
-                else:
-                    response.append(f"Товар с артикулом {article_or_cross} и кросс-номерами не найден.\n")
+            else:
+                response.append(f"Товар с артикулом {article_or_cross} и кросс-номерами не найден.\n")
+
 
         keyboard = create_product_keyboard()
         await message.answer(''.join(response), reply_markup=keyboard)
