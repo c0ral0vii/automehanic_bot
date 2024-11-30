@@ -1,16 +1,18 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 def create_admin_navigation():
+    button_status = KeyboardButton(text='Админ:')
     button_auth = KeyboardButton(text="🔐 Авторизация")
     button_catalog = KeyboardButton(text="📦 Изменить уровень цен")
-    button_presentations = KeyboardButton(text="📑 Презентации")
     button_contact = KeyboardButton(text="📞 Отправить рассылку")
+    button_reload = KeyboardButton(text='🔃Обновить каталог')
 
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
+            [button_status],
             [button_auth],
-            [button_presentations, button_catalog],
-            [button_contact],
+            [button_catalog],
+            [button_contact, button_reload],
         ],
         resize_keyboard=True
     )
@@ -54,11 +56,13 @@ def create_catalog_navigation():
 def create_notification_navigation():
     all_users = KeyboardButton(text="Отправить рассылку всем пользователем")
     specifiс_user = KeyboardButton(text="Отправить рассылку определенному пользователю")
+    cancel_button = KeyboardButton(text="Отмена")
 
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [all_users],
-            [specifiс_user]
+            [specifiс_user],
+            [cancel_button]
         ],
         resize_keyboard=True
     )
