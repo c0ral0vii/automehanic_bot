@@ -24,10 +24,9 @@ async def catalog_handler(message: types.Message):
     inline_keyboard = create_catalog_keyboard()
     reply_keyboard = create_cancel_keyboard()
     
-    await message.answer('''Приветствую! 👋  
-Я – бот-помощник MARSHALL.OFF-HIGHWAY 🚜.  
-Здесь вы найдете качественные запчасти от бренда MARSHALL для строительной и сельскохозяйственной техники в наличии и под заказ 🛠.''',reply_markup=reply_keyboard)
-    await message.answer(text, reply_markup=inline_keyboard)
+    await message.answer('''• Отправьте артикул, чтобы узнать о стоимости и наличии необходимой детали на нашем складе. 🏷  
+• Изучите информацию по артикулу, чтобы понять, подходит он вам или нет. 🔍  ''',reply_markup=reply_keyboard)
+    await message.answer('''• Чтобы видеть актуальные цены, вы можете авторизоваться (если уже являетесь нашим клиентом) или направить нам запрос на добавление вашей компании в ряды партнеров и получить персональное предложение! 💼''', reply_markup=inline_keyboard)
 
 @catalog_router.callback_query(lambda c: c.data == "request_single_article")
 async def handle_single_article_request(callback_query: types.CallbackQuery, state: FSMContext):
