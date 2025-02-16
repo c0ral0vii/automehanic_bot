@@ -2,7 +2,9 @@ import aiosmtplib
 from email.message import EmailMessage
 
 
-async def send_order_email(user_id: int, username: str, order_items: list, contact_info: str):
+async def send_order_email(
+    user_id: int, username: str, order_items: list, contact_info: str
+):
     order_message = f"""
     <html>
         <body>
@@ -32,9 +34,9 @@ async def send_order_email(user_id: int, username: str, order_items: list, conta
 
     email = EmailMessage()
     email["From"] = "demidovicpav4@gmail.com"  # developer
-    email["To"] = "zavarin.pav@yandex.ru"    # admin
+    email["To"] = "zavarin.pav@yandex.ru"  # admin
     email["Subject"] = "Новый заказ"
-    email.set_content(order_message, subtype='html') 
+    email.set_content(order_message, subtype="html")
 
     await send_mail(email=email)
 
@@ -61,7 +63,7 @@ async def send_contact_email(user_id: int, username: str, question: str):
     email["From"] = "demidovicpav4@gmail.com"
     email["To"] = "zavarin.pav@yandex.ru"
     email["Subject"] = "Новый вопрос"
-    email.set_content(question_message, subtype='html')
+    email.set_content(question_message, subtype="html")
 
     await send_mail(email=email)
 
@@ -73,5 +75,5 @@ async def send_mail(email: EmailMessage) -> None:
         port=465,
         username="demidovicpav4@gmail.com",
         password="czhc bydt omqs cssm ",
-        use_tls=True
+        use_tls=True,
     )

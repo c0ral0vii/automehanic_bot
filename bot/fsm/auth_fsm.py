@@ -8,8 +8,8 @@ class AuthForm(StatesGroup):
     phone_number = State()
 
     texts = {
-        'AuthForm:name': 'Введите имя заново:',
-        'AuthForm:surname': 'Введите фамилию заново:',
-        'AuthForm:organization_name': 'Введите организацию заново:',
-        'AuthForm:phone_number': 'Этот стейт последний, поэтому...',
+        "AuthForm:name": "Введите имя заново:",
+        "AuthForm:surname": "Введите фамилию заново:",
+        "AuthForm:organization_name": "Введите организацию заново:",
+        "AuthForm:phone_number": "Этот стейт последний, поэтому...",
     }

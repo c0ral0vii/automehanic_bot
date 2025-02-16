@@ -3,7 +3,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 def create_main_keyboard(auth: bool = False):
     if auth:
-        button_auth = KeyboardButton(text='👨‍🦱Мой профиль')
+        button_auth = KeyboardButton(text="👨‍🦱Мой профиль")
     else:
         button_auth = KeyboardButton(text="🔐 Авторизоваться")
     button_catalog = KeyboardButton(text="📦 Каталог")
@@ -16,7 +16,7 @@ def create_main_keyboard(auth: bool = False):
             [button_presentations],
             [button_contact, button_auth],
         ],
-        resize_keyboard=True
+        resize_keyboard=True,
     )
 
     return keyboard

@@ -1,23 +1,26 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
+
 def create_admin_navigation():
-    button_status = KeyboardButton(text='Админ:')
+    button_status = KeyboardButton(text="Админ:")
     button_auth = KeyboardButton(text="🔐 Авторизация")
     button_catalog = KeyboardButton(text="📦 Изменить уровень цен")
     button_contact = KeyboardButton(text="📞 Отправить рассылку")
-    button_reload = KeyboardButton(text='🔃Обновить каталог')
+    button_reload = KeyboardButton(text="🔃Обновить каталог")
+    button_add_new_catalog = KeyboardButton(text="➕Изменить каталог")
 
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [button_status],
             [button_auth],
-            [button_catalog],
+            [button_catalog, button_add_new_catalog],
             [button_contact, button_reload],
         ],
-        resize_keyboard=True
+        resize_keyboard=True,
     )
 
     return keyboard
+
 
 def create_auth_navigation():
     auth_requests = KeyboardButton(text="Запросы на авторизацию")
@@ -25,16 +28,13 @@ def create_auth_navigation():
     all_auth_users = KeyboardButton(text="Все авторизованные пользователи")
     cancel_button = KeyboardButton(text="Отмена")
 
-    keyboard = ReplyKeyboardMarkup(keyboard=[
-        [auth_requests],
-        [all_users],
-        [all_auth_users],
-        [cancel_button]
-    ],
-    resize_keyboard=True
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[[auth_requests], [all_users], [all_auth_users], [cancel_button]],
+        resize_keyboard=True,
     )
 
     return keyboard
+
 
 def create_catalog_navigation():
     change_one_user = KeyboardButton(text="Поменять одному пользователю")
@@ -43,15 +43,17 @@ def create_catalog_navigation():
     change_all_users = KeyboardButton(text="Поменять всем пользователям")
     cancel_button = KeyboardButton(text="Отмена")
 
-    keyboard = ReplyKeyboardMarkup(keyboard=[
-        [change_one_user, change_group],
-        [change_cateogory, change_all_users],
-        [cancel_button]
-    ],
-    resize_keyboard=True
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [change_one_user, change_group],
+            [change_cateogory, change_all_users],
+            [cancel_button],
+        ],
+        resize_keyboard=True,
     )
 
     return keyboard
+
 
 def create_notification_navigation():
     all_users = KeyboardButton(text="Отправить рассылку всем пользователем")
@@ -59,12 +61,7 @@ def create_notification_navigation():
     cancel_button = KeyboardButton(text="Отмена")
 
     keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [all_users],
-            [specifiс_user],
-            [cancel_button]
-        ],
-        resize_keyboard=True
+        keyboard=[[all_users], [specifiс_user], [cancel_button]], resize_keyboard=True
     )
 
     return keyboard
