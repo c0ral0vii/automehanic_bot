@@ -31,10 +31,10 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(Integer, unique=True, index=True)
-    name: Mapped[str] = mapped_column(String, index=True)
-    surname: Mapped[str] = mapped_column(String)
-    organization_name: Mapped[str] = mapped_column(String)
-    phone_number: Mapped[str] = mapped_column(String)
+    name: Mapped[str] = mapped_column(String, index=True, nullable=True)
+    surname: Mapped[str] = mapped_column(String, nullable=True)
+    organization_name: Mapped[str] = mapped_column(String, nullable=True)
+    phone_number: Mapped[str] = mapped_column(String, nullable=True)
     role: Mapped[UserRole] = mapped_column(
         SqlEnum(UserRole, name="role"), default=UserRole.UNDEFINED
     )
@@ -76,7 +76,6 @@ class Product(Base):
     photo_url_4: Mapped[str] = mapped_column(
         String(500), nullable=True
     )  # Ссылка на фото 3
-    cross_numbers: Mapped[str] = mapped_column(Text, nullable=True)  # Кросс-номера
     applicability_brands: Mapped[str] = mapped_column(
         Text, nullable=True
     )  # Бренды применимости

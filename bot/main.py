@@ -1,5 +1,6 @@
 import asyncio
 from aiogram import Bot, Dispatcher, types
+
 from config import BOT_TOKEN
 from handlers.start_handler import start_router
 from handlers.catalog_handler import catalog_router
@@ -46,10 +47,7 @@ async def on_startup(dp):
 
 
 async def main():
-    # await add_product()
     await bot.delete_webhook(drop_pending_updates=True)
-    # await bot.set_my_commands(commands=private, scope=types.BotCommandScopeAllPrivateChats())
-    # await bot.delete_my_commands(scope=types.BotCommandScopeAllPrivateChats())
     await on_startup(dp)
     print("Started Successfully")
     await dp.start_polling(bot)
@@ -57,3 +55,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+

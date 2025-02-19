@@ -21,5 +21,7 @@ ADMINS_LIST = [
     if admin.split("#")[0].strip().isdigit()
 ]
 
+API_UID = os.environ.get("API_UID", "")
+ADMIN_API_TOKEN = os.environ.get("ADMIN_TOKEN", "")
 
 CATALOG_FILE_PATH = os.path.join("./bot/utils/data/catalog", "data.xlsx")

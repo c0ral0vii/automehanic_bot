@@ -51,6 +51,7 @@ async def accept_request(callback_query: types.CallbackQuery):
     await update_user_price_level(int(user_id), selected_price_level)
     await callback_query.answer("Запрос принят.")
     await callback_query.message.delete()
+
     welcome_message = (
         "Здравствуйте! Ваш запрос на регистрацию успешно прошел модерацию. "
         "Добро пожаловать! Вы можете начать использовать все возможности нашей платформы."

@@ -14,26 +14,43 @@ services:
     networks:
       - app-network
 
-  adminer:
-    image: adminer
-    container_name: adminer
-    ports:
-      - "8080:8080"
-    networks:
-      - app-network
-
   bot:
     build: .
     depends_on:
       - db
     container_name: telegram_bot
+    restart: always
     volumes:
       - .:/app
-    ports:
-      - 80:80
     networks:
       - app-network
 
+
+  admin:
+    build:
+      context: .
+      dockerfile: admin.Dockerfile
+    depends_on:
+      - db
+    container_name: admin_panel
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:latest
+    depends_on:
+      - admin
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx_config.conf:/etc/nginx/nginx.conf
+      - ./bot/api/static:/var/www/static
+    networks:
+      - app-network
 
 networks:
   app-network:

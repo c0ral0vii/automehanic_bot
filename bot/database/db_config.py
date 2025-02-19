@@ -1,6 +1,9 @@
-from sqlalchemy import or_, select
+import random
+
+from sqlalchemy import or_, select, func, extract
 from sqlalchemy.exc import IntegrityError
-from typing import AsyncGenerator
+from datetime import date
+from typing import AsyncGenerator, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from .models import *
 import sys
@@ -93,19 +96,77 @@ async def add_user(
             result = await session.execute(select(User).where(User.user_id == user_id))
             existing_user = result.scalars().first()
 
-            if existing_user:
+            if existing_user.role != UserRole.UNDEFINED:
                 return False
 
-            new_user = User(
-                user_id=user_id,
-                name=name,
-                surname=surname,
-                organization_name=organization_name,
-                phone_number=phone_number,
-            )
-            session.add(new_user)
+            existing_user.name = name
+            existing_user.surname = surname
+            existing_user.organization_name = organization_name
+            existing_user.phone_number = phone_number
+
+            session.add(existing_user)
             await session.commit()
             return True
+
+
+async def get_items_db(find: str) -> List[Dict[str, Any]]:
+    async with async_session() as session:
+        stmt_products = select(Product.id, Product.article_number, Product.cross_numbers, Product.name, Product.amount)
+
+        if find != "":
+            stmt = stmt_products.where(
+                or_(
+                    Product.article_number.ilike(f"%{find}%"),
+                    Product.cross_numbers.ilike(f"%{find}%"),
+                    Product.name.ilike(f"%{find}%")
+                )
+            )
+        else:
+            stmt = select(
+                Product.id,
+                Product.article_number,
+                Product.cross_numbers,
+                Product.name,
+                Product.amount
+            ).order_by(Product.id.asc())
+
+        result_products = await session.execute(stmt)
+
+        products = [
+            {
+                "id": row.id,
+                "article": row.article_number,
+                "cross_article": row.cross_numbers,
+                "name": row.name,
+                "count": row.amount,
+            }
+            for row in result_products
+        ]
+
+        return products
+
+async def add_start_user(
+    user_id: int
+):
+    async with async_session() as session:
+        async with session.begin():
+            try:
+                result = await session.execute(select(User).where(User.user_id == user_id))
+                existing_user = result.scalars().first()
+
+                if existing_user:
+                    return False
+
+                new_user = User(
+                    user_id=user_id,
+                )
+                session.add(new_user)
+                await session.commit()
+                return True
+            except IntegrityError:
+                return False
+            except Exception:
+                return False
 
 
 async def get_product_by_article_or_cross_number(article_or_cross: str):
@@ -162,6 +223,57 @@ async def get_all_users() -> List[User]:
             result = await session.execute(select(User))
             users = result.scalars().all()
             return users
+
+
+async def get_all_user_counts() -> dict:
+    async with async_session() as session:
+        stmt_total = select(func.count(User.id))
+        result_total = await session.execute(stmt_total)
+        total_users = result_total.scalar()
+
+        stmt_updated_today = select(func.count(User.id)).where(
+            func.date(User.updated) == date.today()
+        )
+        result_updated_today = await session.execute(stmt_updated_today)
+        updated_today = result_updated_today.scalar()
+
+        stmt_authorized = select(func.count(User.id)).where(
+            User.role != UserRole.UNDEFINED
+        )
+        result_authorized = await session.execute(stmt_authorized)
+        authorized_users = result_authorized.scalar()
+
+        stmt_non_authorized = select(func.count(User.id)).where(
+            User.role != UserRole.USER,
+        )
+        result_non_authorized = await session.execute(stmt_non_authorized)
+        non_authorized = result_non_authorized.scalar()
+
+        return {
+            "total_users": total_users,
+            "updated_today": updated_today,
+            "authorized_users": authorized_users,
+            "non_authorized": non_authorized,
+        }
+
+
+async def get_user_by_hours():
+    async with async_session() as session:
+        stmt_users_by_hour = select(
+            extract('hour', User.updated).label('hour'),
+            func.count(User.id)
+        ).group_by(extract('hour', User.updated)).order_by(extract('hour', User.updated))
+
+        result_users_by_hour = await session.execute(stmt_users_by_hour)
+        users_by_hour = result_users_by_hour.fetchall()
+
+        hours = [int(row[0]) for row in users_by_hour]
+        values = [int(row[1]) for row in users_by_hour]
+
+        return {
+            "labels": hours,
+            "values": values
+        }
 
 
 async def get_user(user_id: int):
@@ -300,7 +412,7 @@ async def check_auth(user_id: int) -> bool:
             result = await session.execute(select(User).where(User.user_id == user_id))
             user = result.scalar_one_or_none()
 
-            if not user:
+            if not user or user.role == UserRole.UNDEFINED:
                 return False
             return True
 

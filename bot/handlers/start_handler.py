@@ -2,7 +2,8 @@ from aiogram import Router, types, F
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from keyboards.reply.main_keyboard import create_main_keyboard
-from database.db_config import check_auth
+from database.db_config import check_auth, add_start_user
+
 from utils.texts import get_greeting_text
 
 start_router = Router(name="start")
@@ -12,7 +13,11 @@ start_router = Router(name="start")
 async def start_handler(message: types.Message, state: FSMContext) -> None:
     text = get_greeting_text()
     await state.clear()
-    keyboard = create_main_keyboard(auth=await check_auth(user_id=message.from_user.id))
+    check = await check_auth(user_id=message.from_user.id)
+    keyboard = create_main_keyboard(auth=check)
+
+    if not check:
+        await add_start_user(message.from_user.id)
 
     await message.answer(
         """Приветствую! 👋  
@@ -20,6 +25,7 @@ async def start_handler(message: types.Message, state: FSMContext) -> None:
 Здесь вы найдете качественные запчасти от бренда MARSHALL для строительной и сельскохозяйственной техники в наличии и под заказ 🛠.""",
         reply_markup=keyboard,
     )
+
     await message.answer(
         """• Отправьте артикул, чтобы узнать о стоимости и наличии необходимой детали на нашем складе. 🏷  
 • Изучите информацию по артикулу, чтобы понять, подходит он вам или нет. 🔍  

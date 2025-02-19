@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automehanic Admin</title>
+    <link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css " rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link type="text/css" href="/static/css/style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div id="loader" class="loader-overlay">
+        <div class="loader-spinner"></div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line me-2"></i>
+                Automehanic Admin
+            </a>
+            <div class="d-flex align-items-center">
+                <span class="text-light me-3">Последнее обновление: <span id="lastUpdateTime">-</span></span>
+                <button id="refreshButton" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-users me-2"></i>
+                            Всего пользователей
+                        </h5>
+                        <h2 id="totalUsers">-</h2>
+                        <small class="text-muted">Активно сегодня: <span id="activeToday">-</span></small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-server me-2"></i>
+                            Статус системы
+                        </h5>
+                        <h2 id="systemStatus">-</h2>
+                        <small class="text-muted">Нагрузка: <span id="systemLoad">-</span></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title">Активность пользователей</h5>
+                            <div class="btn-group">
+                                <button class="btn btn-outline-secondary btn-sm" data-period="24h">24h</button>
+                                <button class="btn btn-outline-secondary btn-sm" data-period="7d">7d</button>
+                                <button class="btn btn-outline-secondary btn-sm" data-period="30d">30d</button>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="activityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title">Пользователи:</h5>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="usersChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title">Позиции</h5>
+                            <div class="d-flex gap-2">
+                                <input type="text" class="form-control form-control-sm" id="groupSearch" placeholder="Введите кросс номер...">
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="groupsTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Артикл</th>
+                                        <th>Кросс номер</th>
+                                        <th>Название</th>
+                                        <th>Количество</th>
+                                        <th>Действия</th>
+
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="text-muted">
+                                Показано <span id="showingCount">0</span> из <span id="totalCount">0</span> позиций
+                            </div>
+                            <ul class="pagination pagination-sm mb-0" id="groupsPagination"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">Редактирование позиции:</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="itemName" class="form-label">Название слота</label>
+                            <input type="text" class="form-control" id="itemName">
+                        </div>
+                        <div class="mb-3">
+                            <label for="itemArticle" class="form-label">Артикл</label>
+                            <input class="form-control" id="itemArticle">
+                        </div>
+                        <div class="mb-3">
+                            <label for="crossNumber" class="form-label">Кросс номера</label>
+                            <input class="form-control" id="crossNumber">
+                        </div>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Имя товара</label>
+                            <input class="form-control" id="name">
+                        </div>
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Остаток</label>
+                            <input class="form-control" id="amount">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="default_price" class="form-label">Обычная цена</label>
+                            <input class="form-control" id="default_price">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="first_price" class="form-label">Первая цена</label>
+                            <input class="form-control" id="first_price">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="second_lvl_price" class="form-label">Второй уровень цены</label>
+                            <input class="form-control" id="second_lvl_price">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="third_lvl_price" class="form-label">Третий уровень цены</label>
+                            <input class="form-control" id="third_lvl_price">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="fourth_lvl_price" class="form-label">Четвертый уровень цены</label>
+                            <input class="form-control" id="fourth_lvl_price">
+                        </div>
+                        <div class="mb-3">
+                            <label for="brand" class="form-label">Брэнд</label>
+                            <input class="form-control" id="brand">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="product_group" class="form-label">Товарная группа</label>
+                            <input class="form-control" id="product_group">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="part_type" class="form-label">Тип запчасти</label>
+                            <input class="form-control" id="part_type">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="photo_url_1" class="form-label">Первая фотография</label>
+                            <input class="form-control" id="photo_url_1">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="photo_url_2" class="form-label">Вторая фотография</label>
+                            <input class="form-control" id="photo_url_2">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="photo_url_3" class="form-label">Третья фотография</label>
+                            <input class="form-control" id="photo_url_3">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="photo_url_4" class="form-label">Четвертая фотография</label>
+                            <input class="form-control" id="photo_url_4">
+                        </div>
+                        <div class="mb-3">
+                            <label for="applicability_brands" class="form-label">Бренды применимости</label>
+                            <input class="form-control" id="applicability_brands">
+                        </div>
+                        <div class="mb-3">
+                            <label for="applicable_tech" class="form-label">Техника применимости</label>
+                            <input class="form-control" id="applicable_tech">
+                        </div>
+                        <div class="mb-3">
+                            <label for="weight_kg" class="form-label">Вес, кг</label>
+                            <input class="form-control" id="weight_kg">
+                        </div>
+                        <div class="mb-3">
+                            <label for="length_m" class="form-label">Длина, м</label>
+                            <input class="form-control" id="length_m">
+                        </div>
+                        <div class="mb-3">
+                            <label for="inner_diameter_mm" class="form-label">Внутренний диаметр, мм</label>
+                            <input class="form-control" id="inner_diameter_mm">
+                        </div>
+                        <div class="mb-3">
+                            <label for="outer_diameter_mm" class="form-label">Внешний диаметр, мм</label>
+                            <input class="form-control" id="outer_diameter_mm">
+                        </div>
+                        <div class="mb-3">
+                            <label for="thread_diameter_mm" class="form-label">Диаметр резьбы</label>
+                            <input class="form-control" id="thread_diameter_mm">
+                        </div>
+                        <div class="mb-3">
+                            <label for="width_m" class="form-label">Ширина</label>
+                            <input class="form-control" id="width_m">
+                        </div>
+                        <div class="mb-3">
+                            <label for="height_m" class="form-label">Высота</label>
+                            <input class="form-control" id="height_m">
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                        <button type="button" class="btn btn-primary" onclick="saveChanges()">Сохранить изменения</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/charts.js"></script>
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>
