@@ -15,6 +15,8 @@
         <div class="loader-spinner"></div>
     </div>
 
+    <div class="toast-container" id="toastContainer"></div>
+
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">
@@ -54,6 +56,35 @@
                         </h5>
                         <h2 id="systemStatus">-</h2>
                         <small class="text-muted">Нагрузка: <span id="systemLoad">-</span></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mt-5">
+            <div class="row">
+                <div class="col-md-12">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#fileUploadModal">Добавить презентацию</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for file upload -->
+        <div class="modal fade" id="fileUploadModal" tabindex="-1" aria-labelledby="fileUploadModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="fileUploadModalLabel">Загрузить презентацию</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="fileUploadForm" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="fileInput" class="form-label">Выберите файл для загрузки</label>
+                                <input class="form-control" type="file" id="fileInput" name="file" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Загрузить</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -136,10 +167,6 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="itemName" class="form-label">Название слота</label>
-                            <input type="text" class="form-control" id="itemName">
-                        </div>
                         <div class="mb-3">
                             <label for="itemArticle" class="form-label">Артикл</label>
                             <input class="form-control" id="itemArticle">
@@ -255,7 +282,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                        <button type="button" class="btn btn-primary" onclick="saveChanges()">Сохранить изменения</button>
+                        <button type="button" class="btn btn-primary" id="saveItemButton" data-bs-dismiss="modal">Сохранить изменения</button>
                     </div>
                 </div>
             </div>

@@ -12,4 +12,5 @@ async def verify_admin_token(api_key: str = Security(api_key_header)) -> bool:
             status_code=403,
             detail="Invalid admin token"
         )
+
     return True

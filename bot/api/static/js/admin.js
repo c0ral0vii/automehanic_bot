@@ -201,20 +201,115 @@ class AdminPanel {
         await this.loadDashboardData();
     }
 
-    getMoreInfo(item_id) {
-        const data = this.fetchAPI(`/users/${item_id}/info`)
-
-        document.getElementById('itemName').value = 'Item ' + item_id;
-        document.getElementById('itemDescription').value = 'Description for item ' + item_id;
-
+    async getMoreInfo(item_id) {
+        const data = await this.fetchAPI(`/items/${item_id}/info`)
+        console.log(data)
+        document.getElementById('name').value = data.name;
+        document.getElementById('itemArticle').value = data.article;
+        document.getElementById('crossNumber').value = data.cross_number;
+        document.getElementById('amount').value = data.amount;
+        document.getElementById('default_price').value = data.default_price;
+        document.getElementById('first_price').value = data.first_price;
+        document.getElementById('second_lvl_price').value = data.second_lvl_price;
+        document.getElementById('third_lvl_price').value = data.third_lvl_price;
+        document.getElementById('fourth_lvl_price').value = data.fourth_lvl_price;
+        document.getElementById('brand').value = data.brand;
+        document.getElementById('product_group').value = data.product_group;
+        document.getElementById('part_type').value = data.part_type;
+        document.getElementById('photo_url_1').value = data.photo_url_1;
+        document.getElementById('photo_url_2').value = data.photo_url_2;
+        document.getElementById('photo_url_3').value = data.photo_url_3;
+        document.getElementById('photo_url_4').value = data.photo_url_4;
+        document.getElementById('applicability_brands').value = data.applicability_brands;
+        document.getElementById('applicable_tech').value = data.applicable_tech;
+        document.getElementById('weight_kg').value = data.weight_kg;
+        document.getElementById('length_m').value = data.length_m;
+        document.getElementById('inner_diameter_mm').value = data.inner_diameter_mm;
+        document.getElementById('outer_diameter_mm').value = data.outer_diameter_mm;
+        document.getElementById('thread_diameter_mm').value = data.thread_diameter_mm;
+        document.getElementById('width_m').value = data.width_m;
+        document.getElementById('height_m').value = data.height_m;
         const modal = new bootstrap.Modal(document.getElementById('editModal'));
+
+        document.getElementById("saveItemButton").onclick = function () {
+            adminPanel.saveChange(item_id);
+        };
+
         modal.show();
+
+        await this.loadDashboardData()
     }
 
-    deleteItem(item_id) {
+    async deleteItem(item_id) {
 
+        await this.fetchAPI(`/items/${item_id}/delete`, {method: 'DELETE'})
+
+        await this.showToast("Удаление произошло успешно")
+        await this.loadDashboardData()
     }
 
+    async saveChange(item_id) {
+        let updatedData = {
+            "name": document.getElementById('name').value,
+            "article_number": document.getElementById('itemArticle').value,
+            "cross_numbers": document.getElementById('crossNumber').value,
+            "amount": document.getElementById('amount').value,
+            "default_price": document.getElementById('default_price').value,
+            "first_lvl_price": document.getElementById('first_price').value,
+            "second_lvl_price": document.getElementById('second_lvl_price').value,
+            "third_lvl_price": document.getElementById('third_lvl_price').value,
+            "fourth_lvl_price": document.getElementById('fourth_lvl_price').value,
+            "brand": document.getElementById('brand').value,
+            "product_group": document.getElementById('product_group').value,
+            "part_type": document.getElementById('part_type').value,
+            "photo_url_1": document.getElementById('photo_url_1').value,
+            "photo_url_2": document.getElementById('photo_url_2').value,
+            "photo_url_3": document.getElementById('photo_url_3').value,
+            "photo_url_4": document.getElementById('photo_url_4').value,
+            "applicability_brands": document.getElementById('applicability_brands').value,
+            "applicable_tech": document.getElementById('applicable_tech').value,
+            "weight_kg": document.getElementById('weight_kg').value,
+            "length_m": document.getElementById('length_m').value,
+            "inner_diameter_mm": document.getElementById('inner_diameter_mm').value,
+            "outer_diameter_mm": document.getElementById('outer_diameter_mm').value,
+            "thread_diameter_mm": document.getElementById('thread_diameter_mm').value,
+            "width_m": document.getElementById('width_m').value,
+            "height_m": document.getElementById('height_m').value,
+        }
+        await this.fetchAPI(`/items/${item_id}/change`, {method: 'PUT', body: JSON.stringify(updatedData)})
+        await this.showToast("Изменения успешно занесены")
+        await this.loadDashboardData()
+    }
+
+    async showToast(message) {
+        const toastContainer = document.getElementById('toastContainer');
+
+        const toast = document.createElement('div');
+        toast.className = 'toast align-items-center text-bg-success border-0 position-relative';
+        toast.role = 'alert';
+        toast.ariaLive = 'assertive';
+        toast.ariaAtomic = 'true';
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        const bootstrapToast = new bootstrap.Toast(toast, {
+            delay: 2000
+        });
+        bootstrapToast.show();
+
+        // Optional: Remove the toast after it’s hidden
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
+    }
 
     updateItemTable(data) {
         const tbody = document.querySelector('#groupsTable tbody');
@@ -236,7 +331,7 @@ class AdminPanel {
                             Изменить
                         </button>
                         <button class="btn btn-sm btn-danger"
-                                onclick="adminPanel.deleteItem()">
+                                onclick="adminPanel.deleteItem(${item.id})">
                                 Удалить
                         </button>
                     </div>

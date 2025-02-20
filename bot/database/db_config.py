@@ -48,6 +48,19 @@ async def check_user_role(user_id: int):
         return existing_user.role if existing_user else None
 
 
+async def get_item(item_id: int):
+    async with async_session() as session:
+        stmt = select(Product).where(Product.id == item_id)
+        result = await session.execute(stmt)
+        item = result.scalar_one_or_none()
+
+        if not item:
+            return {"text": "Не найдено",
+                    "error": ""}
+
+        return item
+
+
 async def get_price_for_user(user_id: int, article_or_cross: str):
     async with async_session() as session:
         async with session.begin():
@@ -434,12 +447,32 @@ async def my_profile(user_id: int) -> tuple:
                 "role": "Авторизован",
             }
 
+async def delete_product_from_db(item_id: int):
+    """Удаление товара"""
+    async with async_session() as session:
+        stmt = select(Product).where(Product.id == item_id)
+        result = await session.execute(stmt)
+        product = result.scalar_one_or_none()
 
-async def add_or_update_product_to_db(session: AsyncSession, product_data):
-    stmt = select(Product).filter_by(article_number=product_data["article_number"])
-    result = await session.execute(stmt)
+        if not product:
+            return
 
-    existing_product = result.scalars().first()
+        await session.delete(product)
+        await session.commit()
+
+
+async def add_or_update_product_to_db(product_data: dict, session: AsyncSession = None):
+    if not session:
+        async with async_session() as session:
+            stmt = select(Product).filter_by(article_number=product_data["article_number"])
+            result = await session.execute(stmt)
+
+            existing_product = result.scalars().first()
+    else:
+        stmt = select(Product).filter_by(article_number=product_data["article_number"])
+        result = await session.execute(stmt)
+
+        existing_product = result.scalars().first()
 
     if existing_product:
         existing_product.name = product_data["name"]
@@ -464,6 +497,10 @@ async def add_or_update_product_to_db(session: AsyncSession, product_data):
         existing_product.inner_diameter_mm = product_data["inner_diameter_mm"]
         existing_product.outer_diameter_mm = product_data["outer_diameter_mm"]
         existing_product.thread_diameter_mm = product_data["thread_diameter_mm"]
+        existing_product.width_m = product_data["width_m"]
+        existing_product.height_m = product_data["height_m"]
+        session.add(existing_product)
+        await session.commit()
     else:
         new_product = Product(
             article_number=product_data["article_number"],

@@ -364,3 +364,11 @@ body {
     from { transform: translateY(-20px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
+
+#toastContainer {
+    position: fixed;
+    bottom: 20px; /* Toasts will appear 20px from the bottom */
+    left: 50%;
+    transform: translateX(-50%); /* Center the toasts horizontally */
+    z-index: 1050; /* Ensure it appears above other content */
+}
