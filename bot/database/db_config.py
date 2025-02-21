@@ -3,7 +3,7 @@ import random
 from sqlalchemy import or_, select, func, extract
 from sqlalchemy.exc import IntegrityError
 from datetime import date
-from typing import AsyncGenerator, Dict, Any
+from typing import AsyncGenerator, Dict, Any, Optional
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from .models import *
 import sys
@@ -55,8 +55,7 @@ async def get_item(item_id: int):
         item = result.scalar_one_or_none()
 
         if not item:
-            return {"text": "Не найдено",
-                    "error": ""}
+            return {"text": "Не найдено", "error": ""}
 
         return item
 
@@ -122,16 +121,22 @@ async def add_user(
             return True
 
 
-async def get_items_db(find: str) -> List[Dict[str, Any]]:
+async def get_items_db(find: str = "") -> List[Dict[str, Any]]:
     async with async_session() as session:
-        stmt_products = select(Product.id, Product.article_number, Product.cross_numbers, Product.name, Product.amount)
+        stmt_products = select(
+            Product.id,
+            Product.article_number,
+            Product.cross_numbers,
+            Product.name,
+            Product.amount,
+        )
 
         if find != "":
             stmt = stmt_products.where(
                 or_(
                     Product.article_number.ilike(f"%{find}%"),
                     Product.cross_numbers.ilike(f"%{find}%"),
-                    Product.name.ilike(f"%{find}%")
+                    Product.name.ilike(f"%{find}%"),
                 )
             )
         else:
@@ -140,7 +145,7 @@ async def get_items_db(find: str) -> List[Dict[str, Any]]:
                 Product.article_number,
                 Product.cross_numbers,
                 Product.name,
-                Product.amount
+                Product.amount,
             ).order_by(Product.id.asc())
 
         result_products = await session.execute(stmt)
@@ -158,13 +163,14 @@ async def get_items_db(find: str) -> List[Dict[str, Any]]:
 
         return products
 
-async def add_start_user(
-    user_id: int
-):
+
+async def add_start_user(user_id: int):
     async with async_session() as session:
         async with session.begin():
             try:
-                result = await session.execute(select(User).where(User.user_id == user_id))
+                result = await session.execute(
+                    select(User).where(User.user_id == user_id)
+                )
                 existing_user = result.scalars().first()
 
                 if existing_user:
@@ -272,10 +278,11 @@ async def get_all_user_counts() -> dict:
 
 async def get_user_by_hours():
     async with async_session() as session:
-        stmt_users_by_hour = select(
-            extract('hour', User.updated).label('hour'),
-            func.count(User.id)
-        ).group_by(extract('hour', User.updated)).order_by(extract('hour', User.updated))
+        stmt_users_by_hour = (
+            select(extract("hour", User.updated).label("hour"), func.count(User.id))
+            .group_by(extract("hour", User.updated))
+            .order_by(extract("hour", User.updated))
+        )
 
         result_users_by_hour = await session.execute(stmt_users_by_hour)
         users_by_hour = result_users_by_hour.fetchall()
@@ -283,10 +290,7 @@ async def get_user_by_hours():
         hours = [int(row[0]) for row in users_by_hour]
         values = [int(row[1]) for row in users_by_hour]
 
-        return {
-            "labels": hours,
-            "values": values
-        }
+        return {"labels": hours, "values": values}
 
 
 async def get_user(user_id: int):
@@ -447,8 +451,10 @@ async def my_profile(user_id: int) -> tuple:
                 "role": "Авторизован",
             }
 
+
 async def delete_product_from_db(item_id: int):
     """Удаление товара"""
+
     async with async_session() as session:
         stmt = select(Product).where(Product.id == item_id)
         result = await session.execute(stmt)
@@ -466,13 +472,11 @@ async def add_or_update_product_to_db(product_data: dict, session: AsyncSession 
         async with async_session() as session:
             stmt = select(Product).filter_by(article_number=product_data["article_number"])
             result = await session.execute(stmt)
-
-            existing_product = result.scalars().first()
     else:
         stmt = select(Product).filter_by(article_number=product_data["article_number"])
         result = await session.execute(stmt)
 
-        existing_product = result.scalars().first()
+    existing_product = result.scalars().first()
 
     if existing_product:
         existing_product.name = product_data["name"]
@@ -500,7 +504,8 @@ async def add_or_update_product_to_db(product_data: dict, session: AsyncSession 
         existing_product.width_m = product_data["width_m"]
         existing_product.height_m = product_data["height_m"]
         session.add(existing_product)
-        await session.commit()
+        if not session:
+            await session.commit()
     else:
         new_product = Product(
             article_number=product_data["article_number"],
@@ -532,9 +537,23 @@ async def add_or_update_product_to_db(product_data: dict, session: AsyncSession 
         session.add(new_product)
 
 
+async def update_amount(article: str, amount: str | int) -> None:
+    async with async_session() as session:
+        stmt = select(Product).where(Product.article_number == article)
+        result = await session.execute(stmt)
+        product = result.scalar_one_or_none()
+
+        if not product:
+            return
+
+        product.amount = str(amount)
+        session.add(product)
+        await session.commit()
+
 async def update_catalog():
     async with async_session() as session:
         async with session.begin():
             async for product_data in add_products_from_excel():
-                await add_or_update_product_to_db(session, product_data)
+                await add_or_update_product_to_db(session=session, product_data=product_data)
+
         await session.commit()

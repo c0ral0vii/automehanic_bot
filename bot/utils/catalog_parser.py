@@ -97,9 +97,7 @@ async def add_products_from_excel():
             else None
         )
 
-        cross_numbers = (
-            str(row["Кросс-номера"]) if not pd.isnull(row["Кросс-номера"]) else None
-        )
+
         # applicability_brands = str(row['Бренды применимости']) if not pd.isnull(row['Бренды применимости']) else None
         applicable_tech = str(row["Техника"]) if not pd.isnull(row["Техника"]) else None
         weight_kg = str(row["Вес, кг."]) if not pd.isnull(row["Вес, кг."]) else None
@@ -137,7 +135,6 @@ async def add_products_from_excel():
             "photo_url_2": photo_url_2,
             "photo_url_3": photo_url_3,
             "photo_url_4": photo_url_4,
-            "cross_numbers": cross_numbers,
             "applicability_brands": None,
             "applicable_tech": applicable_tech,
             "weight_kg": weight_kg,

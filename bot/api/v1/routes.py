@@ -5,8 +5,14 @@ import shutil
 from fastapi.responses import JSONResponse
 
 from api.schemas.models import ItemRequest
-from database.db_config import get_all_user_counts, get_user_by_hours, get_items_db, get_item, \
-    add_or_update_product_to_db, delete_product_from_db
+from database.db_config import (
+    get_all_user_counts,
+    get_user_by_hours,
+    get_items_db,
+    get_item,
+    add_or_update_product_to_db,
+    delete_product_from_db,
+)
 
 import random
 
@@ -27,7 +33,7 @@ async def get_overview_stats():
         "auth_users": all_users.get("authorized_users", 0),
         "active_today": all_users.get("updated_today", 0),
         "system_status": "HEALTHY",
-        "system_load": f"-"
+        "system_load": f"-",
     }
 
     return JSONResponse(content=data)
@@ -38,10 +44,12 @@ async def get_activity_data():
     """Получение данных активности"""
     users = await get_user_by_hours()
 
-    return JSONResponse(content={
-        "labels": users.get("labels", []),
-        "values": users.get("values", []),
-    })
+    return JSONResponse(
+        content={
+            "labels": users.get("labels", []),
+            "values": users.get("values", []),
+        }
+    )
 
 
 @router.get("/analytics/users")
@@ -49,9 +57,11 @@ async def get_user_data():
     """Получение данных количества пользователей"""
     all_users = await get_all_user_counts()
 
-
     data = {
-        "values": [all_users.get("authorized_users", 1), all_users.get("non_authorized", 0)] # auth, non-auth
+        "values": [
+            all_users.get("authorized_users", 1),
+            all_users.get("non_authorized", 0),
+        ]  # auth, non-auth
     }
 
     return JSONResponse(content=data)
@@ -66,13 +76,12 @@ async def get_items(
     """Получение списка пользователей"""
 
     items = await get_items_db(search)
-    logging.debug(items)
-    logging.debug(skip, limit)
+
     data = {
-        "items": items[skip:skip + limit],
+        "items": items[skip : skip + limit],
         "total": len(items),
         "page": skip // limit + 1 if search == "" else 1,
-        "total_pages": (len(items) + limit - 1) // limit
+        "total_pages": (len(items) + limit - 1) // limit,
     }
 
     return JSONResponse(content=data)
@@ -84,34 +93,35 @@ async def get_item_info(item_id: int):
 
     item = await get_item(item_id)
     data = {
-            "name": item.name,
-            "article": item.article_number,
-            "cross_number": item.cross_numbers,
-            "amount": item.amount,
-            "default_price": item.default_price,
-            "first_price": item.first_lvl_price,
-            "second_lvl_price": item.second_lvl_price,
-            "third_lvl_price": item.third_lvl_price,
-            "fourth_lvl_price": item.fourth_lvl_price,
-            "brand": item.brand,
-            "product_group": item.product_group,
-            "part_type": item.part_type,
-            "photo_url_1": item.photo_url_1,
-            "photo_url_2": item.photo_url_2,
-            "photo_url_3": item.photo_url_3,
-            "photo_url_4": item.photo_url_4,
-            "applicability_brands": item.applicability_brands,
-            "applicable_tech": item.applicable_tech,
-            "weight_kg": item.weight_kg,
-            "length_m": item.length_m,
-            "inner_diameter_mm": item.inner_diameter_mm,
-            "outer_diameter_mm": item.outer_diameter_mm,
-            "thread_diameter_mm": item.thread_diameter_mm,
-            "width_m": item.width_m,
-            "height_m": item.height_m,
-            }
+        "name": item.name,
+        "article": item.article_number,
+        "cross_number": item.cross_numbers,
+        "amount": item.amount,
+        "default_price": item.default_price,
+        "first_price": item.first_lvl_price,
+        "second_lvl_price": item.second_lvl_price,
+        "third_lvl_price": item.third_lvl_price,
+        "fourth_lvl_price": item.fourth_lvl_price,
+        "brand": item.brand,
+        "product_group": item.product_group,
+        "part_type": item.part_type,
+        "photo_url_1": item.photo_url_1,
+        "photo_url_2": item.photo_url_2,
+        "photo_url_3": item.photo_url_3,
+        "photo_url_4": item.photo_url_4,
+        "applicability_brands": item.applicability_brands,
+        "applicable_tech": item.applicable_tech,
+        "weight_kg": item.weight_kg,
+        "length_m": item.length_m,
+        "inner_diameter_mm": item.inner_diameter_mm,
+        "outer_diameter_mm": item.outer_diameter_mm,
+        "thread_diameter_mm": item.thread_diameter_mm,
+        "width_m": item.width_m,
+        "height_m": item.height_m,
+    }
 
     return JSONResponse(content=data)
+
 
 @router.put("/items/{item_id}/change")
 async def change_item_info(item_id: int, item: ItemRequest):
@@ -119,30 +129,37 @@ async def change_item_info(item_id: int, item: ItemRequest):
 
     try:
         await add_or_update_product_to_db(product_data=item.model_dump())
-        return JSONResponse(content={
-            "status": 200,
-            "change": True,
-            "item_id": item_id,
-        },
-        status_code=200)
+        return JSONResponse(
+            content={
+                "status": 200,
+                "change": True,
+                "item_id": item_id,
+            },
+            status_code=200,
+        )
     except Exception as e:
-        return JSONResponse(content={
-            "status": 500,
-            "change": False,
-            "error": str(e),
-        },
-        status_code=500)
+        return JSONResponse(
+            content={
+                "status": 500,
+                "change": False,
+                "error": str(e),
+            },
+            status_code=500,
+        )
+
 
 @router.delete("/items/{item_id}/delete")
 async def delete_item(item_id: int):
     """Удаление айтема из каталога"""
 
     await delete_product_from_db(item_id)
-    return JSONResponse(content={
-        "status": 200,
-        "delete": True,
-        "item_id": item_id,
-    })
+    return JSONResponse(
+        content={
+            "status": 200,
+            "delete": True,
+            "item_id": item_id,
+        }
+    )
 
 
 # @router.post("/upload_presentation/")
@@ -156,5 +173,3 @@ async def delete_item(item_id: int):
 #         return JSONResponse(content={"success": True, "filename": file.filename})
 #     except Exception as e:
 #         return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
-
-

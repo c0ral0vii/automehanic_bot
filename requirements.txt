@@ -7,6 +7,7 @@ aiosmtplib==4.0.0
 alembic==1.13.3
 annotated-types==0.7.0
 anyio==4.8.0
+APScheduler==3.11.0
 async-timeout==4.0.3
 asyncpg==0.29.0
 attrs==24.2.0
@@ -43,5 +44,6 @@ SQLAlchemy==2.0.35
 starlette==0.45.3
 typing_extensions==4.12.2
 tzdata==2025.1
+tzlocal==5.3
 uvicorn==0.34.0
 yarl==1.15.2

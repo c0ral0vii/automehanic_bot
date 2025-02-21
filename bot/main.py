@@ -15,8 +15,9 @@ from handlers.admin_notification_handler import (
 from handlers.profile_handler import profile_router
 from handlers.undefiend_handler import undefiend_handler
 from handlers.admin_import_catalog_handler import router
-from utils.send_message import notify_user, notify_user_upd
-from database.db_config import add_product
+from service.count_updater.service import UpdateCountService
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import pytz
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -47,12 +48,20 @@ async def on_startup(dp):
 
 
 async def main():
+    await run_updater()
+
     await bot.delete_webhook(drop_pending_updates=True)
     await on_startup(dp)
-    print("Started Successfully")
+    print("Start")
     await dp.start_polling(bot)
 
+async def run_updater():
+    updater = UpdateCountService()
+
+    scheduler = AsyncIOScheduler(timezone=pytz.timezone("Europe/Moscow"))
+    scheduler.add_job(updater.check_stock, 'cron', hour=0, minute=0)
+
+    scheduler.start()
 
 if __name__ == "__main__":
     asyncio.run(main())
-

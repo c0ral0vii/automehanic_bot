@@ -45,15 +45,17 @@ async def admin_import_new_catalog(message: types.Message, state: FSMContext, bo
 
         file = await bot.get_file(file_id)
         if message.document.file_name != "data.xlsx":
-            await message.answer(
-                "Не правильный формат файла, пример - 'data.xlsx'"
-            )
+            await message.answer("Не правильный формат файла, пример - 'data.xlsx'")
             return
 
         await bot.download_file(file.file_path, CATALOG_FILE_PATH)
 
-        await message.answer("Файл каталога успешно обновлен, нажмите обновить каталог чтобы добавить новые товары!")
+        await message.answer(
+            "Файл каталога успешно обновлен, нажмите обновить каталог чтобы добавить новые товары!"
+        )
         await state.clear()
     except Exception as e:
-        await message.answer(f"Произошла ошибка {e} \n Нажмите заново кнопку добавления и отправьте ваш файл")
+        await message.answer(
+            f"Произошла ошибка {e} \n Нажмите заново кнопку добавления и отправьте ваш файл"
+        )
         await state.clear()

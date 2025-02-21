@@ -31,4 +31,3 @@ class ItemRequest(BaseModel):
     thread_diameter_mm: str | None = None
     width_m: str | None = None
     height_m: str | None = None
-

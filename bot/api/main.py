@@ -20,6 +20,7 @@ print(static_dir)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 from api.v1.routes import router
+
 app.include_router(router, prefix="/api/v1")
 
 
@@ -32,6 +33,8 @@ async def root():
     </script>
     """
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
