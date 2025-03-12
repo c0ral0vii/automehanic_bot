@@ -1,20 +1,23 @@
 import logging
+import pathlib
 
+import aiofiles
 from fastapi import APIRouter, HTTPException, UploadFile, File
 import shutil
 from fastapi.responses import JSONResponse
 
-from api.schemas.models import ItemRequest
-from database.db_config import (
+from bot.api.schemas.models import ItemRequest
+from bot.database.db_config import (
     get_all_user_counts,
-    get_user_by_hours,
     get_items_db,
     get_item,
     add_or_update_product_to_db,
-    delete_product_from_db,
+    delete_product_from_db, update_catalog, get_user_by_days,
 )
 
 import random
+
+from bot.utils.catalog_parser import add_products_from_excel
 
 # from schemas.models import UserResponse
 
@@ -42,7 +45,7 @@ async def get_overview_stats():
 @router.get("/analytics/activity")
 async def get_activity_data():
     """Получение данных активности"""
-    users = await get_user_by_hours()
+    users = await get_user_by_days()
 
     return JSONResponse(
         content={
@@ -161,15 +164,79 @@ async def delete_item(item_id: int):
         }
     )
 
+UPLOAD_DIR = pathlib.Path("./bot")
+PRESENTATIONS_DIR = UPLOAD_DIR / "utils" / "data" / "presentations"
+CATALOG_DIR = UPLOAD_DIR / "utils" / "data" / "catalog"
 
-# @router.post("/upload_presentation/")
-# async def upload_presentation(file: UploadFile = File()):
-#     try:
-#         # Save the uploaded file to a directory on the server
-#         file_location = f"uploaded_files/{file.filename}"
-#         with open(file_location, "wb") as f:
-#             shutil.copyfileobj(file.file, f)
-#
-#         return JSONResponse(content={"success": True, "filename": file.filename})
-#     except Exception as e:
-#         return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
+
+@router.post("/upload_presentation/")
+async def upload_presentation(file: UploadFile = File(...)):
+    if not file:
+        raise HTTPException(status_code=400, detail="Файл не был загружен.")
+
+    try:
+        file_location = PRESENTATIONS_DIR / file.filename
+        async with aiofiles.open(file_location, "wb") as f:
+            while chunk := await file.read(1024):
+                await f.write(chunk)
+        return JSONResponse(content={"success": True, "filename": file.filename})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/presentations/{file_name}")
+async def delete_presentation(file_name: str):
+    try:
+        file_path = PRESENTATIONS_DIR / file_name
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Presentation not found")
+
+        # Delete the file
+        file_path.unlink()
+        return {"message": "Presentation deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/presentations")
+async def get_presentations():
+    try:
+        data = {
+            "items": []  # Use "items" to match the frontend expectation
+        }
+
+        for file in PRESENTATIONS_DIR.iterdir():
+            if file.is_file():
+                data["items"].append({"name": file.name})  # Add each file name to the list
+
+        return JSONResponse(data, status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/upload_catalog/")
+async def upload_catalog(file: UploadFile = File(...)):
+    if not file:
+        raise HTTPException(status_code=400, detail="Файл не был загружен.")
+
+    try:
+        file_location = CATALOG_DIR / file.filename
+        async with aiofiles.open(file_location, "wb") as f:
+            while chunk := await file.read(1024):
+                await f.write(chunk)
+
+        await update_catalog()
+
+        return JSONResponse(content={"success": True, "filename": file.filename})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/catalog/refresh")
+async def refresh_catalog():
+    try:
+        await update_catalog()
+
+        return JSONResponse(content={"success": True}, status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

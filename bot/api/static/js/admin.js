@@ -112,6 +112,18 @@ class AdminPanel {
         return response.json();
     }
 
+    async fetchFilesAPI(endpoint, options = {}) {
+            const response = await fetch(`/api/v1${endpoint}`, {
+                ...options,
+            });
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.statusText}`);
+            }
+
+            return response.json();
+        }
+
     async loadItems() {
             try {
                 const params = new URLSearchParams({
@@ -139,26 +151,109 @@ class AdminPanel {
             this.refreshData();
         });
 
-        document.querySelectorAll('[data-period]').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const period = e.target.dataset.period;
-                this.charts.updateActivityPeriod(period);
-            });
+        document.getElementById("catalogUploadForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            let fileInput = document.getElementById("catalogInput");
+            if (fileInput.files.length === 0) {
+                this.showError("Выберите файл перед загрузкой!");
+                return;
+            }
+            await adminPanel.uploadCatalog(fileInput.files[0]);
         });
+
+        document.getElementById("fileUploadForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            let fileInput = document.getElementById("fileInput");
+            if (fileInput.files.length === 0) {
+                adminPanel.showError("Выберите файл перед загрузкой!");
+                return;
+            }
+            await adminPanel.uploadPresentation(fileInput.files[0]);
+        });
+
+        const refreshCatalogButton = document.getElementById('refreshCatalogButton');
+        if (refreshCatalogButton) {
+            refreshCatalogButton.addEventListener('click', async () => {
+                try {
+                    let response = await fetch("api/v1/catalog/refresh", {
+                        'method': 'GET',
+                    });
+                    if (response.ok) {
+                        await this.refreshData();
+                        await this.showToast("Каталог успешно обновлен!");
+                    } else {
+                        let error = await response.json();
+                        await this.showError("Ошибка обновления каталога: " + error.detail);
+                    }
+                } catch (error) {
+                    await this.showError("Ошибка обновления каталога: " + error.message);
+                }
+            });
+        } else {
+            console.error('Element with ID "refreshCatalogButton" not found.');
+        }
+
+    }
+
+    async uploadCatalog(file) {
+        try {
+            let formData = new FormData();
+            formData.append("file", file);
+            console.log(formData); // Логируем содержимое FormData
+
+            let response = await fetch("/api/v1/upload_catalog/", {
+                method: "POST",
+                body: formData
+            });
+
+            if (!response.ok) {
+                let error = await response.json();
+                console.error("Ошибка загрузки:", error);
+            } else {
+                let result = await response.json();
+                alert("Файл успешно загружен: " + result.filename);
+            }
+        } catch (error) {
+            alert("Ошибка сети: " + error.message);
+        }
+    }
+
+    async uploadPresentation(file) {
+        try {
+            let formData = new FormData();
+            formData.append("file", file);
+            console.log(formData); // Логируем содержимое FormData
+
+            let response = await fetch("/api/v1/upload_presentation/", {
+                method: "POST",
+                body: formData
+            });
+
+            if (!response.ok) {
+                let error = await response.json();
+                console.error("Ошибка загрузки:", error);
+            } else {
+                let result = await response.json();
+                alert("Файл успешно загружен: " + result.filename);
+            }
+        } catch (error) {
+            alert("Ошибка сети: " + error.message);
+        }
     }
 
     async loadDashboardData() {
         try {
             this.showLoader();
 
-            const [overviewData, itemData] = await Promise.all([
+            const [overviewData, itemData, presentations] = await Promise.all([
                 fetchAPI('/stats/overview'),
                 fetchAPI('/items'),
+                fetchAPI('/presentations/')
             ]);
 
             this.updateOverviewStats(overviewData);
-            this.updateItemTable(itemData)
-
+            this.updateItemTable(itemData);
+            this.updatePresentation(presentations);
 
             this.updateLastUpdateTime();
 
@@ -311,6 +406,51 @@ class AdminPanel {
         });
     }
 
+    updatePresentation(data) {
+        const tbody = document.querySelector('#presentationsTable tbody');
+        tbody.innerHTML = '';
+
+        data.items.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.name}</td>
+                <td>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-danger" data-action="delete" data-id="${item.name}">
+                            Удалить
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        tbody.querySelectorAll('[data-action="delete"]').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const itemId = e.target.dataset.id;
+                this.deletePresentation(itemId);
+            });
+        });
+    }
+
+    async deletePresentation(item_id) {
+        try {
+            const response = await fetch(`/api/v1/presentations/${item_id}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete presentation');
+            }
+
+            await this.showToast("Презентация успешно удалена");
+            await this.loadDashboardData(); // Refresh the dashboard data
+        } catch (error) {
+            console.error('Error deleting presentation:', error);
+            this.showError('Failed to delete presentation');
+        }
+    }
+
     updateItemTable(data) {
         const tbody = document.querySelector('#groupsTable tbody');
         tbody.innerHTML = '';
@@ -323,22 +463,33 @@ class AdminPanel {
                 <td>${item.cross_article}</td>
                 <td>${item.name}</td>
                 <td>${item.count}</td>
-                
                 <td>
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-primary"
-                            onclick="adminPanel.getMoreInfo(${item.id})">
+                        <button class="btn btn-sm btn-outline-primary" data-action="edit" data-id="${item.id}">
                             Изменить
                         </button>
-                        <button class="btn btn-sm btn-danger"
-                                onclick="adminPanel.deleteItem(${item.id})">
-                                Удалить
+                        <button class="btn btn-sm btn-danger" data-action="delete" data-id="${item.id}">
+                            Удалить
                         </button>
                     </div>
                 </td>
-                
             `;
             tbody.appendChild(row);
+        });
+
+        // Attach event listeners
+        tbody.querySelectorAll('[data-action="edit"]').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const itemId = e.target.dataset.id;
+                this.getMoreInfo(itemId);
+            });
+        });
+
+        tbody.querySelectorAll('[data-action="delete"]').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const itemId = e.target.dataset.id;
+                this.deleteItem(itemId);
+            });
         });
 
         this.updatePagination(data.total, data.page, data.total_pages);
@@ -395,8 +546,7 @@ class AdminPanel {
     }
 }
 
-let adminPanel;
 document.addEventListener('DOMContentLoaded', async () => {
-    adminPanel = new AdminPanel();
+    window.adminPanel = new AdminPanel(); // Attach to window
     await adminPanel.initialize();
 });

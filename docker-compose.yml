@@ -30,22 +30,25 @@ services:
     build:
       context: .
       dockerfile: admin.Dockerfile
-    depends_on:
-      - db
-    container_name: admin_panel
-    volumes:
-      - .:/app
+    container_name: admin
+    restart: always
     ports:
       - "8000:8000"
+    volumes:
+      - .:/app
     networks:
       - app-network
 
   nginx:
     image: nginx:latest
+    container_name: nginx
+    restart: always
     depends_on:
+      - db
       - admin
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx_config.conf:/etc/nginx/nginx.conf
       - ./bot/api/static:/var/www/static

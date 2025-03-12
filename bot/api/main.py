@@ -1,8 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse
+
 import os
+
+from bot.api.v1 import auth
 
 app = FastAPI(title="Crypto Tracker Admin")
 
@@ -16,25 +19,26 @@ app.add_middleware(
 
 
 static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
-print(static_dir)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-from api.v1.routes import router
+from bot.api.v1.routes import router
 
-app.include_router(router, prefix="/api/v1")
-
+app.include_router(router, prefix="/api/v1", tags=["Analytic API"])
+app.include_router(auth.router, prefix="/api/auth", tags=["Auth API"])
 
 # Root endpoint
-@app.get("/", response_class=HTMLResponse)
+@app.get(
+    "/admin",
+    response_class=FileResponse,
+    dependencies=[Depends(auth.security.access_token_required)],
+)
 async def root():
-    return """
-    <script>
-        window.location.href = './static/index.html';
-    </script>
-    """
+    index_html = static_dir + "/index.html"
+    return FileResponse(index_html)
 
 
-if __name__ == "__main__":
-    import uvicorn
+@app.get("/", response_class=FileResponse)
+async def auth_page():
+    auth_html = static_dir + "/auth.html"
+    return FileResponse(auth_html)
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)

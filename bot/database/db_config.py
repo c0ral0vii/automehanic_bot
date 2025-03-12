@@ -2,7 +2,7 @@ import random
 
 from sqlalchemy import or_, select, func, extract
 from sqlalchemy.exc import IntegrityError
-from datetime import date
+from datetime import date, datetime, timedelta
 from typing import AsyncGenerator, Dict, Any, Optional
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from .models import *
@@ -276,21 +276,38 @@ async def get_all_user_counts() -> dict:
         }
 
 
-async def get_user_by_hours():
+async def get_user_by_days():
     async with async_session() as session:
-        stmt_users_by_hour = (
-            select(extract("hour", User.updated).label("hour"), func.count(User.id))
-            .group_by(extract("hour", User.updated))
-            .order_by(extract("hour", User.updated))
+        # Calculate the date range for the last 7 days
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(days=6)  # Last 7 days including today
+
+        # Generate a list of dates for the last 7 days
+        date_range = [start_date + timedelta(days=i) for i in range(7)]
+
+        # Query the database for user counts per day
+        stmt_users_by_day = (
+            select(func.date(User.updated).label("date"), func.count(User.id))
+            .where(User.updated >= start_date)
+            .group_by(func.date(User.updated))
+            .order_by(func.date(User.updated))
         )
 
-        result_users_by_hour = await session.execute(stmt_users_by_hour)
-        users_by_hour = result_users_by_hour.fetchall()
+        result_users_by_day = await session.execute(stmt_users_by_day)
+        users_by_day = result_users_by_day.fetchall()
 
-        hours = [int(row[0]) for row in users_by_hour]
-        values = [int(row[1]) for row in users_by_hour]
+        # Create a dictionary to store the results
+        user_counts = {row[0]: row[1] for row in users_by_day}
 
-        return {"labels": hours, "values": values}
+        # Fill in missing days with 0
+        labels = []
+        values = []
+        for date in date_range:
+            date_str = date.strftime("%Y-%m-%d")  # Format date as string
+            labels.append(date_str)
+            values.append(user_counts.get(date_str, 0))
+
+        return {"labels": labels, "values": values}
 
 
 async def get_user(user_id: int):

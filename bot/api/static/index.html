@@ -61,46 +61,12 @@
             </div>
         </div>
 
-        <div class="container mt-5">
-            <div class="row">
-                <div class="col-md-12">
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#fileUploadModal">Добавить презентацию</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal for file upload -->
-        <div class="modal fade" id="fileUploadModal" tabindex="-1" aria-labelledby="fileUploadModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="fileUploadModalLabel">Загрузить презентацию</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="fileUploadForm" enctype="multipart/form-data">
-                            <div class="mb-3">
-                                <label for="fileInput" class="form-label">Выберите файл для загрузки</label>
-                                <input class="form-control" type="file" id="fileInput" name="file" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Загрузить</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="row mt-4">
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="card-title">Активность пользователей</h5>
-                            <div class="btn-group">
-                                <button class="btn btn-outline-secondary btn-sm" data-period="24h">24h</button>
-                                <button class="btn btn-outline-secondary btn-sm" data-period="7d">7d</button>
-                                <button class="btn btn-outline-secondary btn-sm" data-period="30d">30d</button>
-                            </div>
                         </div>
                         <div class="chart-container">
                             <canvas id="activityChart"></canvas>
@@ -117,6 +83,37 @@
                         <div class="chart-container">
                             <canvas id="usersChart"></canvas>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mt-5">
+            <div class="row">
+                <div class="col-md-6 d-flex justify-content-center">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#catalogUploadModal">Изменить каталог</button>
+                </div>
+                <div class="col-md-6 d-flex justify-content-center">
+                    <button class="btn btn-primary" id="refreshCatalogButton">Обновить каталог</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="catalogUploadModal" tabindex="-1" aria-labelledby="catalogUploadModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="catalogUploadModalLabel">Загрузить новый каталог</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="catalogUploadForm" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="catalogInput" class="form-label">Выберите файл загрузки</label>
+                                <input class="form-control" type="file" id="catalogInput" name="file" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Загрузить каталог</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -287,6 +284,59 @@
                 </div>
             </div>
         </div>
+
+        <div class="container mt-5">
+            <div class="row d-flex justify-content-center align-items-center">
+                <div class="col-md-12 text-center">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#fileUploadModal">Добавить презентацию</button>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="modal fade" id="fileUploadModal" tabindex="-1" aria-labelledby="fileUploadModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="fileUploadModalLabel">Загрузить презентацию</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="fileUploadForm" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="fileInput" class="form-label">Выберите файл для загрузки</label>
+                                <input class="form-control" type="file" id="fileInput" name="file" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Загрузить</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title">Презентации</h5>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="presentationsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Название</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

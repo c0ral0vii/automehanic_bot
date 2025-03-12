@@ -22,6 +22,9 @@ ADMINS_LIST = [
 ]
 
 API_UID = os.environ.get("API_UID", "")
-ADMIN_API_TOKEN = os.environ.get("ADMIN_TOKEN", "")
+#admin
+ADMIN_API_TOKEN = os.environ.get("ADMIN_TOKEN", "root")
+ADMIN_USER = os.environ.get("ADMIN_USER", "root")
+ADMIN_PASS = os.environ.get("ADMIN_PASS", "root")
 
 CATALOG_FILE_PATH = os.path.join("./bot/utils/data/catalog", "data.xlsx")
