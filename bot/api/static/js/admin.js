@@ -344,36 +344,49 @@ class AdminPanel {
     }
 
     async saveChange(item_id) {
-        let updatedData = {
-            "name": document.getElementById('name').value,
-            "article_number": document.getElementById('itemArticle').value,
-            "cross_numbers": document.getElementById('crossNumber').value,
-            "amount": document.getElementById('amount').value,
-            "default_price": document.getElementById('default_price').value,
-            "first_lvl_price": document.getElementById('first_price').value,
-            "second_lvl_price": document.getElementById('second_lvl_price').value,
-            "third_lvl_price": document.getElementById('third_lvl_price').value,
-            "fourth_lvl_price": document.getElementById('fourth_lvl_price').value,
-            "brand": document.getElementById('brand').value,
-            "product_group": document.getElementById('product_group').value,
-            "part_type": document.getElementById('part_type').value,
-            "photo_url_1": document.getElementById('photo_url_1').value,
-            "photo_url_2": document.getElementById('photo_url_2').value,
-            "photo_url_3": document.getElementById('photo_url_3').value,
-            "photo_url_4": document.getElementById('photo_url_4').value,
-            "applicability_brands": document.getElementById('applicability_brands').value,
-            "applicable_tech": document.getElementById('applicable_tech').value,
-            "weight_kg": document.getElementById('weight_kg').value,
-            "length_m": document.getElementById('length_m').value,
-            "inner_diameter_mm": document.getElementById('inner_diameter_mm').value,
-            "outer_diameter_mm": document.getElementById('outer_diameter_mm').value,
-            "thread_diameter_mm": document.getElementById('thread_diameter_mm').value,
-            "width_m": document.getElementById('width_m').value,
-            "height_m": document.getElementById('height_m').value,
+        try {
+            let updatedData = {
+                "name": document.getElementById('name').value,
+                "article_number": document.getElementById('itemArticle').value,
+                "cross_numbers": document.getElementById('crossNumber').value,
+                "amount": document.getElementById('amount').value,
+                "default_price": document.getElementById('default_price').value,
+                "first_lvl_price": document.getElementById('first_price').value,
+                "second_lvl_price": document.getElementById('second_lvl_price').value,
+                "third_lvl_price": document.getElementById('third_lvl_price').value,
+                "fourth_lvl_price": document.getElementById('fourth_lvl_price').value,
+                "brand": document.getElementById('brand').value,
+                "product_group": document.getElementById('product_group').value,
+                "part_type": document.getElementById('part_type').value,
+                "photo_url_1": document.getElementById('photo_url_1').value,
+                "photo_url_2": document.getElementById('photo_url_2').value,
+                "photo_url_3": document.getElementById('photo_url_3').value,
+                "photo_url_4": document.getElementById('photo_url_4').value,
+                "applicability_brands": document.getElementById('applicability_brands').value,
+                "applicable_tech": document.getElementById('applicable_tech').value,
+                "weight_kg": document.getElementById('weight_kg').value,
+                "length_m": document.getElementById('length_m').value,
+                "inner_diameter_mm": document.getElementById('inner_diameter_mm').value,
+                "outer_diameter_mm": document.getElementById('outer_diameter_mm').value,
+                "thread_diameter_mm": document.getElementById('thread_diameter_mm').value,
+                "width_m": document.getElementById('width_m').value,
+                "height_m": document.getElementById('height_m').value,
+            };
+
+            const response = await this.fetchAPI(`/items/${item_id}/change`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatedData),
+            });
+
+            await this.showToast("Изменения успешно занесены");
+            await this.loadDashboardData();
+        } catch (error) {
+            console.error('Error saving changes:', error);
+            this.showError('Не удалось сохранить изменения');
         }
-        await this.fetchAPI(`/items/${item_id}/change`, {method: 'PUT', body: JSON.stringify(updatedData)})
-        await this.showToast("Изменения успешно занесены")
-        await this.loadDashboardData()
     }
 
     async showToast(message) {

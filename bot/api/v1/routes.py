@@ -3,7 +3,6 @@ import pathlib
 
 import aiofiles
 from fastapi import APIRouter, HTTPException, UploadFile, File
-import shutil
 from fastapi.responses import JSONResponse
 
 from bot.api.schemas.models import ItemRequest
@@ -14,12 +13,6 @@ from bot.database.db_config import (
     add_or_update_product_to_db,
     delete_product_from_db, update_catalog, get_user_by_days,
 )
-
-import random
-
-from bot.utils.catalog_parser import add_products_from_excel
-
-# from schemas.models import UserResponse
 
 
 router = APIRouter()

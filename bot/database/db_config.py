@@ -451,7 +451,7 @@ async def check_auth(user_id: int) -> bool:
             return True
 
 
-async def my_profile(user_id: int) -> tuple:
+async def my_profile(user_id: int) -> dict | None:
     async with async_session() as session:
         async with session.begin():
             result = await session.execute(select(User).where(User.user_id == user_id))
