@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.filters import StateFilter, Command
 from keyboards.inline.contact_keyboard import create_contact_keyboard
-from keyboards.inline.admin_keyboard import create_simple_inline_navigation
+from keyboards.inline.admin_keyboard import create_simple_inline_navigation, create_user_list_keyboard
 from database.db_config import get_all_users, get_user
 from database.models import UserRole
 from aiogram.fsm.state import State, StatesGroup
@@ -64,14 +64,26 @@ async def send_broadcast_to_all(message: types.Message, state: FSMContext):
     StateFilter(None), F.text == "Отправить рассылку определенному пользователю"
 )
 async def auth_handler(message: types.Message, state: FSMContext):
+    users = await get_all_users()
+    total_users = len(users)
+    users_per_page = 5
+    total_pages = (total_users + users_per_page - 1) // users_per_page
+    current_page = 1
+    
+    page_users = users[
+        (current_page - 1) * users_per_page : current_page * users_per_page
+    ]
+    keyboard = create_user_list_keyboard(page_users, current_page, total_pages)
+    
     await message.answer(
-        "Введите ID пользователя", reply_markup=create_simple_inline_navigation()
+        "Выберите пользователя:", reply_markup=keyboard
     )
-    await state.set_state(NotificationForm.specific_user)
+    
+    await state.set_state(NotificationForm.specific_user) 
 
 
 @admin_router.callback_query(
-    lambda c: c.data == "cancel", StateFilter(NotificationForm)
+    lambda c: c.data == "cancel", StateFilter(NotificationForm),
 )
 @admin_router.message(F.text == "Отмена")
 async def cancel_handler(
@@ -89,31 +101,26 @@ async def cancel_handler(
         )
 
 
-@admin_router.message(StateFilter(NotificationForm.specific_user))
-async def ask_notification_text(message: types.Message, state: FSMContext):
+@admin_router.message(F.data.startswith("user_"), 
+                      StateFilter(NotificationForm.specific_user))
+async def ask_notification_text(callback: types.CallbackQuery, state: FSMContext):
     try:
-        user_id = int(message.text)
-        user = await get_user(user_id)
+        user_id = callback.data.split("_")[1]
+        user = await get_user(int(user_id))
+        await state.update_data(user_id=user_id)
 
-        if user:
-            await state.update_data(user_id=user.user_id)
-            await message.answer(
-                f"Пользователь найден: {user.name}. Введите текст уведомления:",
-                reply_markup=create_simple_inline_navigation(),
-            )
-            await state.set_state(NotificationForm.notification_text_one)
-        else:
-            await message.answer(
-                "Пользователь не найден. Попробуйте снова.",
-                reply_markup=create_simple_inline_navigation(),
-            )
-            await state.set_state(NotificationForm.specific_user)
+        await callback.message.answer(
+            f"Выбран пользователь: {user.name}. Введите текст уведомления:",
+            reply_markup=create_simple_inline_navigation(),
+        )
+        await state.set_state(NotificationForm.notification_text_one)
 
     except ValueError:
-        await message.answer(
+        await callback.message.answer(
             "Пожалуйста, введите действительный ID пользователя.",
             reply_markup=create_simple_inline_navigation(),
         )
+        
         await state.set_state(NotificationForm.specific_user)
 
 

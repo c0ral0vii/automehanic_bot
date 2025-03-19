@@ -157,7 +157,7 @@ async def delete_item(item_id: int):
         }
     )
 
-UPLOAD_DIR = pathlib.Path("./bot")
+UPLOAD_DIR = pathlib.Path(__file__).parent.parent.parent
 PRESENTATIONS_DIR = UPLOAD_DIR / "utils" / "data" / "presentations"
 CATALOG_DIR = UPLOAD_DIR / "utils" / "data" / "catalog"
 
