@@ -153,22 +153,23 @@ class AdminPanel {
 
         document.getElementById("catalogUploadForm").addEventListener("submit", async (event) => {
             event.preventDefault();
-            let fileInput = document.getElementById("catalogInput");
-            if (fileInput.files.length === 0) {
-                this.showError("Выберите файл перед загрузкой!");
-                return;
+            const fileInput = document.getElementById('catalogInput');
+            if (fileInput.files.length > 0) {
+                await this.uploadCatalog(fileInput.files[0]);
+            } else {
+                alert("Пожалуйста, выберите файл каталога");
             }
-            await adminPanel.uploadCatalog(fileInput.files[0]);
         });
 
         document.getElementById("fileUploadForm").addEventListener("submit", async (event) => {
             event.preventDefault();
-            let fileInput = document.getElementById("fileInput");
-            if (fileInput.files.length === 0) {
-                adminPanel.showError("Выберите файл перед загрузкой!");
-                return;
+
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput.files.length > 0) {
+                await this.uploadPresentation(fileInput.files[0]);
+            } else {
+                alert("Пожалуйста, выберите файл");
             }
-            await adminPanel.uploadPresentation(fileInput.files[0]);
         });
 
         const refreshCatalogButton = document.getElementById('refreshCatalogButton');
@@ -196,10 +197,11 @@ class AdminPanel {
     }
 
     async uploadCatalog(file) {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('catalogUploadModal'));
+
         try {
             let formData = new FormData();
             formData.append("file", file);
-            console.log(formData); // Логируем содержимое FormData
 
             let response = await fetch("/api/v1/upload_catalog/", {
                 method: "POST",
@@ -209,20 +211,28 @@ class AdminPanel {
             if (!response.ok) {
                 let error = await response.json();
                 console.error("Ошибка загрузки:", error);
+                alert("Ошибка загрузки: " + (error.detail || error.message));
             } else {
                 let result = await response.json();
                 alert("Файл успешно загружен: " + result.filename);
+                // Можно добавить обновление данных каталога здесь
+                // await this.loadCatalogData();
             }
         } catch (error) {
+            console.error("Ошибка сети:", error);
             alert("Ошибка сети: " + error.message);
+        } finally {
+            modal.hide(); // Закрываем модальное окно в любом случае
+            document.getElementById('catalogInput').value = ''; // Очищаем поле выбора файла
         }
     }
 
     async uploadPresentation(file) {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('fileUploadModal'));
+
         try {
             let formData = new FormData();
             formData.append("file", file);
-            console.log(formData); // Логируем содержимое FormData
 
             let response = await fetch("/api/v1/upload_presentation/", {
                 method: "POST",
@@ -232,12 +242,18 @@ class AdminPanel {
             if (!response.ok) {
                 let error = await response.json();
                 console.error("Ошибка загрузки:", error);
+                alert("Ошибка загрузки: " + error.detail);
             } else {
                 let result = await response.json();
                 alert("Файл успешно загружен: " + result.filename);
+                await this.loadDashboardData();
             }
         } catch (error) {
+            console.error("Ошибка сети:", error);
             alert("Ошибка сети: " + error.message);
+        } finally {
+            modal.hide(); // Закрываем модальное окно в любом случае
+            document.getElementById('fileInput').value = ''; // Очищаем поле выбора файла
         }
     }
 
@@ -461,6 +477,7 @@ class AdminPanel {
         } catch (error) {
             console.error('Error deleting presentation:', error);
             this.showError('Failed to delete presentation');
+            await this.loadDashboardData();
         }
     }
 

@@ -162,7 +162,7 @@ PRESENTATIONS_DIR = UPLOAD_DIR / "utils" / "data" / "presentations"
 CATALOG_DIR = UPLOAD_DIR / "utils" / "data" / "catalog"
 
 
-@router.post("/upload_presentation/")
+@router.post("/upload_presentation")
 async def upload_presentation(file: UploadFile = File(...)):
     if not file:
         raise HTTPException(status_code=400, detail="Файл не был загружен.")
@@ -187,7 +187,7 @@ async def delete_presentation(file_name: str):
 
         # Delete the file
         file_path.unlink()
-        return {"message": "Presentation deleted successfully"}
+        return JSONResponse(status_code=200, content={"success": True})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -201,27 +201,33 @@ async def get_presentations():
 
         for file in PRESENTATIONS_DIR.iterdir():
             if file.is_file():
-                data["items"].append({"name": file.name})  # Add each file name to the list
+                data["items"].append({"name": file.name})
 
         return JSONResponse(data, status_code=200)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/upload_catalog/")
+@router.post("/upload_catalog")
 async def upload_catalog(file: UploadFile = File(...)):
-    if not file:
-        raise HTTPException(status_code=400, detail="Файл не был загружен.")
+    if not file.filename.lower().endswith('.xlsx'):
+        raise HTTPException(
+            status_code=400,
+            detail="Поддерживаются только файлы с расширением .xlsx"
+        )
 
     try:
-        file_location = CATALOG_DIR / file.filename
+        file_location = CATALOG_DIR / "data.xlsx"
+        if file_location.exists():
+            file_location.unlink()
+
         async with aiofiles.open(file_location, "wb") as f:
             while chunk := await file.read(1024):
                 await f.write(chunk)
 
         await update_catalog()
 
-        return JSONResponse(content={"success": True, "filename": file.filename})
+        return JSONResponse(content={"success": True, "filename": file.filename}, status_code=201)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

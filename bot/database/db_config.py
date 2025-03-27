@@ -484,13 +484,16 @@ async def delete_product_from_db(item_id: int):
         await session.commit()
 
 
-async def add_or_update_product_to_db(product_data: dict, session: AsyncSession = None):
+async def add_or_update_product_to_db(
+        product_data: dict,
+        session: AsyncSession = None
+        ):
     if not session:
         async with async_session() as session:
-            stmt = select(Product).filter_by(article_number=product_data["article_number"])
+            stmt = select(Product).where(Product.article_number == product_data["article_number"])
             result = await session.execute(stmt)
     else:
-        stmt = select(Product).filter_by(article_number=product_data["article_number"])
+        stmt = select(Product).where(Product.article_number == product_data["article_number"])
         result = await session.execute(stmt)
 
     existing_product = result.scalars().first()
@@ -521,8 +524,8 @@ async def add_or_update_product_to_db(product_data: dict, session: AsyncSession 
         existing_product.width_m = product_data["width_m"]
         existing_product.height_m = product_data["height_m"]
         session.add(existing_product)
-        if not session:
-            await session.commit()
+
+        await session.commit()
     else:
         new_product = Product(
             article_number=product_data["article_number"],

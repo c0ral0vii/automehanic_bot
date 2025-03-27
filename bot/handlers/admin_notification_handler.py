@@ -101,11 +101,11 @@ async def cancel_handler(
         )
 
 
-@admin_router.message(F.data.startswith("user_"), 
+@admin_router.callback_query(F.data.startswith("user_"),
                       StateFilter(NotificationForm.specific_user))
 async def ask_notification_text(callback: types.CallbackQuery, state: FSMContext):
     try:
-        user_id = callback.data.split("_")[1]
+        user_id = callback.data.split("_")[-1]
         user = await get_user(int(user_id))
         await state.update_data(user_id=user_id)
 

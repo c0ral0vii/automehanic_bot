@@ -6,7 +6,7 @@ class ItemRequest(BaseModel):
     article_number: str
     cross_numbers: str
     name: str
-    amount: str
+    amount: str | int
     default_price: str | None = None
     first_lvl_price: str | None = None
     second_lvl_price: str | None = None
