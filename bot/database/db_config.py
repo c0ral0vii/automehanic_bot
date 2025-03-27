@@ -488,7 +488,9 @@ async def add_or_update_product_to_db(
         product_data: dict,
         session: AsyncSession = None
         ):
+    not_session = None
     if not session:
+        not_session = True
         async with async_session() as session:
             stmt = select(Product).where(Product.article_number == product_data["article_number"])
             result = await session.execute(stmt)
@@ -524,8 +526,8 @@ async def add_or_update_product_to_db(
         existing_product.width_m = product_data["width_m"]
         existing_product.height_m = product_data["height_m"]
         session.add(existing_product)
-
-        await session.commit()
+        if not_session:
+            await session.commit()
     else:
         new_product = Product(
             article_number=product_data["article_number"],

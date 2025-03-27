@@ -163,15 +163,13 @@ CATALOG_DIR = UPLOAD_DIR / "utils" / "data" / "catalog"
 
 
 @router.post("/upload_presentation")
-async def upload_presentation(file: UploadFile = File(...)):
-    if not file:
-        raise HTTPException(status_code=400, detail="Файл не был загружен.")
-
+async def upload_presentation(file: UploadFile = File(None)):
     try:
         file_location = PRESENTATIONS_DIR / file.filename
         async with aiofiles.open(file_location, "wb") as f:
-            while chunk := await file.read(1024):
+            while chunk := await file.read(1024 * 1024):
                 await f.write(chunk)
+
         return JSONResponse(content={"success": True, "filename": file.filename})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -222,7 +220,7 @@ async def upload_catalog(file: UploadFile = File(...)):
             file_location.unlink()
 
         async with aiofiles.open(file_location, "wb") as f:
-            while chunk := await file.read(1024):
+            while chunk := await file.read(1024 * 1024):
                 await f.write(chunk)
 
         await update_catalog()
