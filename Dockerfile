@@ -11,4 +11,4 @@ RUN pip install --no-cache-dir -r ./requirements.txt
 
 COPY . .
 
-CMD ["sh", "-c", "alembic upgrade head && python bot/main.py"]
+CMD ["sh", "-c", "alembic revision --autogenerate -m 'create a new string restrictions' && alembic upgrade head && python bot/main.py"]

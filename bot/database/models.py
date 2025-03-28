@@ -48,10 +48,10 @@ class Product(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     article_number: Mapped[str] = mapped_column(
-        String(100), unique=True, nullable=False
+        unique=True, nullable=False
     )
-    cross_numbers: Mapped[list] = mapped_column(String(100), nullable=False)
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    cross_numbers: Mapped[list] = mapped_column(String(1000), nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False)
     amount: Mapped[str] = mapped_column(Text)
     default_price: Mapped[str] = mapped_column(Text, nullable=True)
     first_lvl_price: Mapped[str] = mapped_column(Text, nullable=True)
@@ -59,42 +59,42 @@ class Product(Base):
     third_lvl_price: Mapped[str] = mapped_column(Text, nullable=True)
     fourth_lvl_price: Mapped[str] = mapped_column(Text, nullable=True)
 
-    brand: Mapped[str] = mapped_column(String(255), nullable=True)  # Бренд
+    brand: Mapped[str] = mapped_column(nullable=True)  # Бренд
     product_group: Mapped[str] = mapped_column(
-        String(255), nullable=True
+        nullable=True
     )  # Товарная группа
-    part_type: Mapped[str] = mapped_column(String(255), nullable=True)  # Тип запчасти
+    part_type: Mapped[str] = mapped_column(nullable=True)  # Тип запчасти
     photo_url_1: Mapped[str] = mapped_column(
-        String(500), nullable=True
+        nullable=True
     )  # Ссылка на фото 1
     photo_url_2: Mapped[str] = mapped_column(
-        String(500), nullable=True
+        nullable=True
     )  # Ссылка на фото 2
     photo_url_3: Mapped[str] = mapped_column(
-        String(500), nullable=True
+         nullable=True
     )  # Ссылка на фото 3
     photo_url_4: Mapped[str] = mapped_column(
-        String(500), nullable=True
+        nullable=True
     )  # Ссылка на фото 3
     applicability_brands: Mapped[str] = mapped_column(
         Text, nullable=True
     )  # Бренды применимости
     applicable_tech: Mapped[str] = mapped_column(
-        String(255), nullable=True
+         nullable=True
     )  # Техника применимости
-    weight_kg: Mapped[str] = mapped_column(String(255), nullable=True)  # Вес, кг
-    length_m: Mapped[str] = mapped_column(String(255), nullable=True)  # Длина, м
+    weight_kg: Mapped[str] = mapped_column( nullable=True)  # Вес, кг
+    length_m: Mapped[str] = mapped_column(nullable=True)  # Длина, м
     inner_diameter_mm: Mapped[str] = mapped_column(
-        String(255), nullable=True
+        nullable=True
     )  # Внутренний диаметр, мм
     outer_diameter_mm: Mapped[str] = mapped_column(
-        String(255), nullable=True
+        nullable=True
     )  # Внешний диаметр, мм
     thread_diameter_mm: Mapped[str] = mapped_column(
-        String(255), nullable=True
+        nullable=True
     )  # Диаметр резьбы
-    width_m: Mapped[str] = mapped_column(String(255), nullable=True)  # Ширина
-    height_m: Mapped[str] = mapped_column(String(255), nullable=True)  # Высота
+    width_m: Mapped[str] = mapped_column(nullable=True)  # Ширина
+    height_m: Mapped[str] = mapped_column(nullable=True)  # Высота
 
     def __repr__(self):
         return f"<Product(name='{self.name}', article_number='{self.article_number}')>"

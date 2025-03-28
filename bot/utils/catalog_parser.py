@@ -33,12 +33,12 @@ async def add_products_from_excel():
     ]
 
     for index, row in df.iterrows():
-        article_number = row["Исходный номер"]
-        name = row["Наименование"]
+        article_number = str(row["Исходный номер"])
+        name = str(row["Наименование"])
         cross_number = (
             row["Кросс-номера"].split(";")
             if row["Кросс-номера"] in [";"]
-            else row["Кросс-номера"]
+            else str(row["Кросс-номера"])
         )
         amount = str(row["Наличие, шт."]) if not pd.isnull(row["Наличие, шт."]) else "0"
         default_price = (

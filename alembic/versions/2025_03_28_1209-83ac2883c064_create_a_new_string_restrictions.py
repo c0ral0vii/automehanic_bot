@@ -1,8 +1,8 @@
-"""start
+"""create a new string restrictions
 
-Revision ID: 92929d614326
-Revises: e00806249387
-Create Date: 2025-02-20 22:36:15.018175
+Revision ID: 83ac2883c064
+Revises: c6cb7f8929e1
+Create Date: 2025-03-28 12:09:00.894195
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '92929d614326'
-down_revision: Union[str, None] = 'e00806249387'
+revision: str = '83ac2883c064'
+down_revision: Union[str, None] = 'c6cb7f8929e1'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
