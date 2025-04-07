@@ -10,7 +10,7 @@ load_dotenv(find_dotenv())
 
 BOT_TOKEN = str(os.environ.get("BOT_TOKEN", ""))
 DB_HOST = str(os.environ.get("DB_HOST", "db"))
-DB_NAME = str(os.environ.get("DB_NAME", ""))
+DB_NAME = str(os.environ.get("DB_NAME", "automehanic_db"))
 DB_PASSWORD = str(os.environ.get("DB_PASSWORD", "root"))
 DB_PORT = str(os.environ.get("DB_PORT", "5432"))
 DB_USER = str(os.environ.get("DB_USER", "root"))

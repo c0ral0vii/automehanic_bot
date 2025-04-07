@@ -22,7 +22,7 @@ async def login(creds: UserLoginSchema):
 
         print("✅ Устанавливаем куку my_access_token")
         data = JSONResponse({"access_token": token})
-        data.set_cookie(key=config.JWT_ACCESS_COOKIE_NAME, value=token)
+        data.set_cookie(key=config.JWT_ACCESS_COOKIE_NAME, value=token, max_age=1800)
         return data
 
     raise HTTPException(status_code=401, detail="Invalid username or password")

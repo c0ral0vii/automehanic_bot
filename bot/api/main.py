@@ -2,12 +2,20 @@ from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.middleware.gzip import GZipMiddleware
 
 import os
 
 from bot.api.v1 import auth
 
-app = FastAPI(title="Crypto Tracker Admin")
+app = FastAPI(
+    title="Crypto Tracker Admin",
+    # Увеличиваем лимит на размер тела запроса
+    max_request_size=50 * 1024 * 1024  # 50MB
+)
+
+# Добавляем GZip сжатие
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 app.add_middleware(
     CORSMiddleware,
@@ -15,6 +23,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    max_age=3600,
 )
 
 
