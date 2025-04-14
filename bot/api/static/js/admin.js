@@ -227,30 +227,37 @@ class AdminPanel {
         }
     }
 
-    async uploadPresentation(file) {
+    async uploadPresentation(file, retry_count = 1, max_retries = 5) {
         const modal = bootstrap.Modal.getInstance(document.getElementById('fileUploadModal'));
-
+    
         try {
             let formData = new FormData();
             formData.append("file", file);
-
+    
             let response = await fetch("/api/v1/upload_presentation/", {
                 method: "POST",
                 body: formData
             });
-
+    
             if (!response.ok) {
                 let error = await response.json();
                 console.error("Ошибка загрузки:", error);
                 alert("Ошибка загрузки: " + error.detail);
+                throw new Error(error.detail);
             } else {
                 let result = await response.json();
                 alert("Файл успешно загружен: " + result.filename);
                 await this.loadDashboardData();
             }
         } catch (error) {
-            console.error("Ошибка сети:", error);
-            alert("Ошибка сети: " + error.message);
+            if (retry_count >= max_retries) {
+                console.error("Ошибка после всех попыток:", error);
+                alert("Ошибка после " + max_retries + " попыток: " + error.message);
+            } else {
+                console.log(`Попытка ${retry_count} из ${max_retries} не удалась, повтор через 1 секунду...`);
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Задержка 1 секунда
+                await this.uploadPresentation(file, retry_count + 1, max_retries);
+            }
         } finally {
             modal.hide(); // Закрываем модальное окно в любом случае
             document.getElementById('fileInput').value = ''; // Очищаем поле выбора файла

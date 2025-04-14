@@ -1,4 +1,5 @@
 import aiohttp
+import httpx
 from config import API_UID
 from database.db_config import get_items_db, update_amount
 import logging
@@ -21,7 +22,7 @@ logger.addHandler(console_handler)
 class UpdateCountService:
     def __init__(self):
 
-        self.BASE_URL = "http://korona-auto.com/"
+        self.BASE_URL = "https://korona-auto.com/"
 
         self.apiUid = API_UID
         self.dataType = "json"
@@ -73,14 +74,29 @@ class UpdateCountService:
 
 
     async def _send_request(self, url):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                if not response.status == 200:
-                    return None
-
-                data = await response.text()
-
-                data_json = json.loads(data)
-                return data_json
+        """Отправка запроса с обработкой редиректов и ошибок"""
+        # Автоматически заменяем http на https
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            try:
+                response = await client.get(
+                    url,
+                    headers=self.HEADER,
+                    timeout=10.0
+                )
+                response.raise_for_status()
+                
+                data = response.json()
+                logger.debug(f"Response data: {data}")
+                return data
+                
+            except httpx.HTTPStatusError as e:
+                logger.error(f"HTTP error {e.response.status_code} for URL {url}")
+                return None
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to decode JSON from {url}: {e}")
+                return None
+            except httpx.RequestError as e:
+                logger.error(f"Request failed for URL {url}: {e}")
+                return None
 
 
