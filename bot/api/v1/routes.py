@@ -231,21 +231,10 @@ async def get_presentations():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-async def update_catalog_by_file(file: UploadFile = File(...)):
-    """Обновление каталога"""
-    file_location = CATALOG_DIR / "data.xlsx"
-    if file_location.exists():
-        file_location.unlink()
-
-    async with aiofiles.open(file_location, "wb") as f:
-        while chunk := await file.read(1024 * 1024):
-            await f.write(chunk)
-
-    await update_catalog()
-    
-    
 @router.post("/upload_catalog")
 async def upload_catalog(file: UploadFile = File(...)):
+    """Обновление каталога"""
+    
     if not file.filename.lower().endswith('.xlsx'):
         raise HTTPException(
             status_code=400,
@@ -253,11 +242,18 @@ async def upload_catalog(file: UploadFile = File(...)):
         )
 
     try:
-        
-        asyncio.create_task(update_catalog_by_file(file))
+        file_location = CATALOG_DIR / "data.xlsx"
+        if file_location.exists():
+            file_location.unlink()
+
+        async with aiofiles.open(file_location, "wb") as f:
+            while chunk := await file.read(1024 * 1024):
+                await f.write(chunk)
+
         return JSONResponse(content={"success": True, "filename": file.filename}, status_code=201)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/catalog/refresh")
 async def refresh_catalog():
