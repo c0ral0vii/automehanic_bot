@@ -12,7 +12,7 @@ async def check_profile(message: types.Message):
     """
 
     data = await my_profile(user_id=message.from_user.id)
-    if data:
+    if data and data.get("name"):
         await message.answer(
             f"👨‍🦱Мой профиль:\nВаше имя: {data.get('name', 'Не указано')}\nВаша фамилия: {data.get('surname', 'Не указана')}\nВаша организация: {data.get('organization', 'Не указана')}\nВаш номер телефона: {data.get('phone', 'Не указан')}\n\nПри необходимости просьба обратиться в поддержку!"
         )

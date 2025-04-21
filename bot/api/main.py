@@ -9,9 +9,8 @@ import os
 from bot.api.v1 import auth
 
 app = FastAPI(
-    title="Crypto Tracker Admin",
-    # Увеличиваем лимит на размер тела запроса
-    max_request_size=50 * 1024 * 1024  # 50MB
+    title="MARSHALL.OFF-HIGHWAY_BOT",
+    max_request_size=50 * 1024 * 1024
 )
 
 # Добавляем GZip сжатие

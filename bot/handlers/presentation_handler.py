@@ -8,7 +8,7 @@ presentation_router = Router(name="presentations")
 PDF_FOLDER = "./bot/utils/data/presentations"
 
 
-@presentation_router.message(StateFilter(None), F.text == "📑 Презентации по продукту")
+@presentation_router.message(F.text == "📑 Презентации по продукту")
 async def send_presentations(message: types.Message):
     try:
         pdf_files = [f for f in os.listdir(PDF_FOLDER) if f.endswith(".pdf")]
@@ -32,7 +32,7 @@ async def send_pdf(call: types.CallbackQuery):
 
     if os.path.exists(pdf_path):
         await call.message.answer_document(document=types.FSInputFile(pdf_path))
-        await call.answer("Готово")
+        await call.answer("Приятного ознакомленя!")
     else:
         await call.message.answer("Файл не найден.")
         await call.answer("Ошибка")

@@ -25,7 +25,8 @@ admin_router.message.filter(ChatTypeFilter(["private"]), IsAdmin())
 
 
 @admin_router.message(Command("admin"))
-async def admin_features(message: types.Message):
+async def admin_features(message: types.Message, state: FSMContext):
+    await state.clear()
     keyboard = create_admin_navigation()
     await message.answer("Что хотите сделать?", reply_markup=keyboard)
 
@@ -167,7 +168,10 @@ async def all_authenticated_users_handler(message: types.Message):
 @admin_router.message(StateFilter(None), F.text == "🔃Обновить каталог")
 async def reload_catalog(message: types.Message):
     try:
+        delete_message = await message.answer("Приступаю к обновлению каталога!")
         await update_catalog()
+        await delete_message.delete()
+        
         await message.answer(f"Каталог обновлён✅")
     except FileNotFoundError:
         await message.answer(

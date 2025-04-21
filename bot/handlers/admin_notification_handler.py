@@ -83,6 +83,26 @@ async def auth_handler(message: types.Message, state: FSMContext):
 
 
 @admin_router.callback_query(
+    lambda c: c.data.startswith("page_"),
+    StateFilter(NotificationForm.specific_user),
+)
+async def paginate_user_list(callback_query: types.CallbackQuery, state: FSMContext):
+    current_page = int(callback_query.data.split("_")[1])
+
+    users = await get_all_users()
+    total_users = len(users)
+    users_per_page = 5
+    total_pages = (total_users + users_per_page - 1) // users_per_page
+
+    page_users = users[
+        (current_page - 1) * users_per_page : current_page * users_per_page
+    ]
+
+    keyboard = create_user_list_keyboard(page_users, current_page, total_pages)
+    await callback_query.message.edit_reply_markup(reply_markup=keyboard)
+    
+    
+@admin_router.callback_query(
     lambda c: c.data == "cancel", StateFilter(NotificationForm),
 )
 @admin_router.message(F.text == "Отмена")
