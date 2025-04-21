@@ -57,7 +57,7 @@ async def main():
 
 async def run_updater():
     updater = UpdateCountService()
-
+    await updater.check_stock()
     scheduler = AsyncIOScheduler(timezone=pytz.timezone("Europe/Moscow"))
     scheduler.add_job(updater.check_stock, 'cron', hour=0, minute=0)
 
