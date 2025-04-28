@@ -163,35 +163,27 @@ PRESENTATIONS_DIR = UPLOAD_DIR / "utils" / "data" / "presentations"
 CATALOG_DIR = UPLOAD_DIR / "utils" / "data" / "catalog"
 
 
-async def upload_presentation_by_file(file: UploadFile = File(...)):
-    """Загрузка презентации"""
-    
-    # Создаем директорию, если она не существует
-    PRESENTATIONS_DIR.mkdir(parents=True, exist_ok=True)
-    
-    # Проверяем тип файла
-    if not file.filename.lower().endswith(('.pdf')):
-        raise HTTPException(
-            status_code=400,
-            detail="Поддерживаются только файлы с расширением .pdf"
-        )
-        
-    file_location = PRESENTATIONS_DIR / file.filename
-    
-    # Если файл существует, удаляем его
-    if file_location.exists():
-        file_location.unlink()
-        
-    async with aiofiles.open(file_location, "wb") as f:
-        while chunk := await file.read(1024 * 1024):
-            await f.write(chunk)
-            
-    
 @router.post("/upload_presentation")
 async def upload_presentation(file: UploadFile = File(None)):
     try:
+        PRESENTATIONS_DIR.mkdir(parents=True, exist_ok=True)
+    
+        # Проверяем тип файла
+        if not file.filename.lower().endswith(('.pdf')):
+            raise HTTPException(
+                status_code=400,
+                detail="Поддерживаются только файлы с расширением .pdf"
+            )
+            
+        file_location = PRESENTATIONS_DIR / file.filename
         
-        asyncio.create_task(upload_presentation_by_file(file))
+        # Если файл существует, удаляем его
+        if file_location.exists():
+            file_location.unlink()
+            
+        async with aiofiles.open(file_location, "wb") as f:
+            while chunk := await file.read(1024 * 1024):
+                await f.write(chunk)
         return JSONResponse(content={"success": True, "filename": file.filename})
     except HTTPException as e:
         raise HTTPException(status_code=500, detail=f"Ошибка при загрузке файла: {str(e)}")
