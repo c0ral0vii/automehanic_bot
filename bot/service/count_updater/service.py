@@ -22,7 +22,7 @@ logger.addHandler(console_handler)
 class UpdateCountService:
     def __init__(self):
 
-        self.BASE_URL = "https://korona-auto.com/"
+        self.BASE_URL = "http://prod-db-sel-vsrv02.auto.local:8095/"
 
         self.apiUid = API_UID
         self.dataType = "json"
@@ -76,7 +76,7 @@ class UpdateCountService:
     async def _send_request(self, url):
         """Отправка запроса с обработкой редиректов и ошибок"""
         # Автоматически заменяем http на https
-        async with httpx.AsyncClient(follow_redirects=True) as client:
+        async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
                     url,
