@@ -1,7 +1,9 @@
 # Byte-compiled / optimized / DLL files
+.vscode
 __pycache__/
 *.py[cod]
 *$py.class
+.vscode
 
 # C extensions
 *.so
@@ -10,6 +12,7 @@ __pycache__/
 venv/
 env/
 ENV/
+.env
 
 
 # macOS files
