@@ -43,10 +43,15 @@ class UpdateCountService:
                 url = self.BASE_URL + f"api/product/stock/?id={item_id}&apiUid={self.apiUid}&dataType={self.dataType}"
                 response = await self._send_request(url)
 
-                stock = response.get("product", {}).get("stock", {})[0].get("warehouse", {}).get("quantity")
+                stock = response.get("product", {}).get("stock", {})
+                count = 0
 
-                await update_amount(key, stock)
-                logger.info(f"Updated {key}, {stock}")
+                for warehouses in stock:
+                    warehouse_stock = int(warehouses.get("warehouse", {}).get("quantity"))
+                    count += warehouse_stock
+                    
+                await update_amount(key, count)
+                logger.info(f"Updated {key}, {count}")
             except Exception as e:
                 continue
 

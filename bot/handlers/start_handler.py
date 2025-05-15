@@ -16,9 +16,6 @@ async def start_handler(message: types.Message, state: FSMContext) -> None:
     check = await check_auth(user_id=message.from_user.id)
     keyboard = create_main_keyboard(auth=check)
 
-    if not check:
-        await add_start_user(message.from_user.id)
-
     await message.answer(
         """Приветствую! 👋  
 Я – бот-помощник MARSHALL.OFF-HIGHWAY 🚜.  

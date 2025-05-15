@@ -259,27 +259,31 @@ async def process_xlsx_file(message: types.Message, state: FSMContext):
         user_id = message.from_user.id
 
         for index, row in df.iterrows():
-            article_or_cross = str(row["Артикул"]).strip()
-            count = row.get("Количество", 1)
+            try:
+                article_or_cross = str(row["Артикул"]).strip()
+                count = row.get("Количество", 1)
 
-            price = await get_price_for_user(user_id, article_or_cross)
-            if count:
-                price = float(price) * int(count)
+                price = await get_price_for_user(user_id, article_or_cross)
+                if count:
+                    price = float(price) * int(count)
 
-            product = await get_product_by_article_or_cross_number(article_or_cross)
+                product = await get_product_by_article_or_cross_number(article_or_cross)
 
-            if product and price is not None:
-                response.append(
-                    f"Артикул: {product.article_number}\n"
-                    f"Название: {product.name}\n"
-                    f"Наличие: {product.amount}\n"
-                    f"Цена: {price}\n\n"
-                )
+                if product and price is not None:
+                    response.append(
+                        f"Артикул: {product.article_number}\n"
+                        f"Название: {product.name}\n"
+                        f"Наличие: {product.amount}\n"
+                        f"Цена: {price}\n\n"
+                    )
 
-            else:
-                response.append(
-                    f"Товар с артикулом {article_or_cross} и кросс-номерами не найден.\n"
-                )
+                else:
+                    response.append(
+                        f"Товар с артикулом {article_or_cross} и кросс-номерами не найден.\n"
+                    )
+                    continue
+            except Exception as e:
+                continue
 
         keyboard = create_product_keyboard()
         await message.answer("".join(response), reply_markup=keyboard)
@@ -304,20 +308,23 @@ async def process_multiple_articles_input(message: types.Message, state: FSMCont
     user_id = message.from_user.id
 
     for article_or_cross in articles_data:
-        article_or_cross = article_or_cross.strip()
-        if not article_or_cross:
+        try:
+            article_or_cross = article_or_cross.strip()
+            if not article_or_cross:
+                continue
+            price = await get_price_for_user(user_id, article_or_cross)
+            product = await get_product_by_article_or_cross_number(article_or_cross)
+            if product and price:
+                response.append(
+                    f"Артикул: {product.article_number}\n"
+                    f"Название: {product.name}\n"
+                    f"Наличие: {product.amount}\n"
+                    f"Цена: {price}\n\n"
+                )
+            else:
+                response.append(f"Товар с артикулом {article_or_cross} не найден.\n")
+        except Exception as e:
             continue
-        price = await get_price_for_user(user_id, article_or_cross)
-        product = await get_product_by_article_or_cross_number(article_or_cross)
-        if product and price:
-            response.append(
-                f"Артикул: {product.article_number}\n"
-                f"Название: {product.name}\n"
-                f"Наличие: {product.amount}\n"
-                f"Цена: {price}\n\n"
-            )
-        else:
-            response.append(f"Товар с артикулом {article_or_cross} не найден.\n")
 
     if not response:
         await message.answer("Не найдено ни одного товара по указанным артикулам.")
