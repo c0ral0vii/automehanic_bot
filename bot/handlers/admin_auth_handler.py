@@ -9,6 +9,8 @@ from keyboards.reply.admin_keyboard import (
     create_admin_navigation,
     create_auth_navigation,
 )
+from keyboards.reply.main_keyboard import create_main_keyboard
+
 from database.db_config import (
     get_all_users,
     get_users_with_role_user,
@@ -57,7 +59,7 @@ async def accept_request(callback_query: types.CallbackQuery):
         "Здравствуйте! Ваш запрос на регистрацию успешно прошел модерацию. "
         "Добро пожаловать! Вы можете начать использовать все возможности нашей платформы."
     )
-    await notify_user(callback_query.bot, user_id, welcome_message)
+    await notify_user(callback_query.bot, user_id, welcome_message, reply_markup=create_main_keyboard(auth=True))
 
 
 @admin_router.callback_query(lambda cb: cb.data.startswith("reject_"))

@@ -72,12 +72,12 @@ async def back_step_handler(
             await state.set_state(previous)
             if isinstance(callback_query, types.CallbackQuery):
                 await callback_query.message.answer(
-                    f"Ок, вы вернулись к прошлому шагу \n{AuthForm.texts[previous.state]}",
+                    f"Вы вернулись к прошлому шагу \n{AuthForm.texts[previous.state]}",
                     reply_markup=keyboard,
                 )
             else:
                 await callback_query.answer(
-                    f"Ок, вы вернулись к прошлому шагу \n{AuthForm.texts[previous.state]}",
+                    f"Вы вернулись к прошлому шагу \n{AuthForm.texts[previous.state]}",
                     reply_markup=keyboard,
                 )
             return

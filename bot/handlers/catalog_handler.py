@@ -223,11 +223,15 @@ async def handle_view_details(callback_query: types.CallbackQuery, state: FSMCon
                 media.append(InputMediaPhoto(media=product.photo_url_3))
             if product.photo_url_4:
                 media.append(InputMediaPhoto(media=product.photo_url_4))
+        
 
             if media:
-                await callback_query.message.bot.send_media_group(
-                    chat_id=callback_query.message.chat.id, media=media
-                )
+                try:
+                    await callback_query.message.bot.send_media_group(
+                        chat_id=callback_query.message.chat.id, media=media
+                    )
+                except Exception as e:
+                    await callback_query.message.answer(response_text, reply_markup=keyboard)
 
             await callback_query.message.answer(response_text, reply_markup=keyboard)
 

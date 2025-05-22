@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, DateTime, Float, Numeric, String, Text, func, Integer
+from sqlalchemy import Boolean, DateTime, Float, Numeric, String, Text, func, Integer, BigInteger
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from enum import Enum
 from sqlalchemy import Enum as SqlEnum
@@ -30,7 +30,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(Integer, unique=True, index=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
     name: Mapped[str] = mapped_column(String, index=True, nullable=True)
     surname: Mapped[str] = mapped_column(String, nullable=True)
     organization_name: Mapped[str] = mapped_column(String, nullable=True)

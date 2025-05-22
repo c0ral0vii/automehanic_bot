@@ -105,18 +105,15 @@ async def add_user(
 ):
     async with async_session() as session:
         async with session.begin():
-            result = await session.execute(select(User).where(User.user_id == user_id))
-            existing_user = result.scalars().first()
+            new_user = User(
+                user_id=user_id,
+                name=name,
+                surname = surname,
+                organization_name = organization_name,
+                phone_number = phone_number
+            )
 
-            if existing_user.role != UserRole.UNDEFINED:
-                return False
-
-            existing_user.name = name
-            existing_user.surname = surname
-            existing_user.organization_name = organization_name
-            existing_user.phone_number = phone_number
-
-            session.add(existing_user)
+            session.add(new_user)
             await session.commit()
             return True
 
@@ -448,6 +445,7 @@ async def check_auth(user_id: int) -> bool:
 
             if not user or user.role == UserRole.UNDEFINED:
                 return False
+            
             return True
 
 

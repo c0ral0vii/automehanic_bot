@@ -11,7 +11,6 @@ start_router = Router(name="start")
 
 @start_router.message(CommandStart(), StateFilter(None))
 async def start_handler(message: types.Message, state: FSMContext) -> None:
-    text = get_greeting_text()
     await state.clear()
     check = await check_auth(user_id=message.from_user.id)
     keyboard = create_main_keyboard(auth=check)
