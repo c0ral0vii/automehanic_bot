@@ -15,7 +15,7 @@ from keyboards.inline.catalog_keyboard import (
 )
 from keyboards.reply.main_keyboard import create_main_keyboard
 from utils.texts import get_greeting_text
-from aiogram.types import InputMediaPhoto
+from aiogram.types import InputMediaPhoto, InlineKeyboardMarkup, InlineKeyboardButton
 from sqlalchemy.exc import NoResultFound
 from utils.send_email import send_order_email
 from filters.excluded_message import ExcludedMessage
@@ -25,6 +25,9 @@ import pandas as pd
 
 catalog_router = Router(name="catalog")
 # catalog_router.message.filter(ExcludedMessage())
+
+SHOW_MORE_KEY = "show_more_articles"
+ARTICLES_PAGE_SIZE = 10
 
 
 @catalog_router.message(StateFilter(None), F.text == "📦 Каталог")
@@ -245,34 +248,32 @@ async def handle_view_details(callback_query: types.CallbackQuery, state: FSMCon
         )
 
 
+def split_responses(responses, page_size=ARTICLES_PAGE_SIZE):
+    for i in range(0, len(responses), page_size):
+        yield responses[i:i+page_size]
+
+
 @catalog_router.message(Form.multiple_articles, F.document)
 async def process_xlsx_file(message: types.Message, state: FSMContext):
     document_id = message.document.file_id
     document = await message.bot.get_file(document_id)
-
     file_path = await message.bot.download_file(document.file_path)
-
     try:
         df = pd.read_excel(file_path, header=None, engine="openpyxl")
         try:
             df.columns = ["Артикул", "Количество"]
         except Exception as e:
             df.columns = ["Артикул"]
-
         response = []
         user_id = message.from_user.id
-
         for index, row in df.iterrows():
             try:
                 article_or_cross = str(row["Артикул"]).strip()
                 count = row.get("Количество", 1)
-
                 price = await get_price_for_user(user_id, article_or_cross)
                 if count:
                     price = float(price) * int(count)
-
                 product = await get_product_by_article_or_cross_number(article_or_cross)
-
                 if product and price is not None:
                     response.append(
                         f"Артикул: {product.article_number}\n"
@@ -280,7 +281,6 @@ async def process_xlsx_file(message: types.Message, state: FSMContext):
                         f"Наличие: {product.amount}\n"
                         f"Цена: {price}\n\n"
                     )
-
                 else:
                     response.append(
                         f"Товар с артикулом {article_or_cross} и кросс-номерами не найден.\n"
@@ -288,10 +288,9 @@ async def process_xlsx_file(message: types.Message, state: FSMContext):
                     continue
             except Exception as e:
                 continue
-
-        keyboard = create_product_keyboard()
-        await message.answer("".join(response), reply_markup=keyboard)
-
+        # Сохраняем все ответы и текущую страницу в FSMContext
+        await state.update_data(multi_articles_responses=response, multi_articles_page=0)
+        await send_articles_page(message, state)
     except FileNotFoundError:
         await message.answer("Файл не найден. Пожалуйста, попробуйте снова.")
     except ValueError as ve:
@@ -310,7 +309,6 @@ async def process_multiple_articles_input(message: types.Message, state: FSMCont
     articles_data = message.text.strip().split("\n")
     response = []
     user_id = message.from_user.id
-
     for article_or_cross in articles_data:
         try:
             article_or_cross = article_or_cross.strip()
@@ -329,12 +327,8 @@ async def process_multiple_articles_input(message: types.Message, state: FSMCont
                 response.append(f"Товар с артикулом {article_or_cross} не найден.\n")
         except Exception as e:
             continue
-
-    if not response:
-        await message.answer("Не найдено ни одного товара по указанным артикулам.")
-    else:
-        keyboard = create_product_keyboard()
-        await message.answer("".join(response), reply_markup=keyboard)
+    await state.update_data(multi_articles_responses=response, multi_articles_page=0)
+    await send_articles_page(message, state)
 
 
 @catalog_router.message(Form.article_quantity_input, F.text)
@@ -436,3 +430,36 @@ async def process_contact_info(message: types.Message, state: FSMContext):
         reply_markup=keyboard,
     )
     await state.clear()
+
+
+def get_show_more_keyboard():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="Показать ещё", callback_data=SHOW_MORE_KEY)]]
+    )
+
+
+async def send_articles_page(message_or_callback, state: FSMContext):
+    data = await state.get_data()
+    responses = data.get("multi_articles_responses", [])
+    page = data.get("multi_articles_page", 0)
+    start = page * ARTICLES_PAGE_SIZE
+    end = start + ARTICLES_PAGE_SIZE
+    page_responses = responses[start:end]
+    text = "".join(page_responses)
+    has_more = end < len(responses)
+    if not text:
+        await message_or_callback.answer("Не найдено ни одного товара по указанным артикулам.")
+        return
+    keyboard = get_show_more_keyboard() if has_more else create_product_keyboard()
+    await message_or_callback.answer(text, reply_markup=keyboard)
+    # Если есть ещё, увеличиваем страницу
+    if has_more:
+        await state.update_data(multi_articles_page=page + 1)
+    else:
+        await state.update_data(multi_articles_page=0)
+
+
+@catalog_router.callback_query(lambda c: c.data == SHOW_MORE_KEY, StateFilter(Form.multiple_articles))
+async def show_more_articles_callback(callback_query: types.CallbackQuery, state: FSMContext):
+    await send_articles_page(callback_query.message, state)
+    await callback_query.answer()

@@ -72,3 +72,9 @@ def create_inline_navigation():
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[cancel_button, back_button]])
 
     return keyboard
+
+
+def create_show_more_keyboard():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="Показать ещё", callback_data="show_more_articles")]]
+    )
