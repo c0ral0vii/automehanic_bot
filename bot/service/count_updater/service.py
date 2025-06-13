@@ -47,12 +47,14 @@ class UpdateCountService:
                 count = 0
 
                 for warehouses in stock:
-                    warehouse_stock = int(warehouses.get("warehouse", {}).get("quantity"))
-                    count += warehouse_stock
+                    for warehouse in warehouses:
+                        warehouse_stock = int(warehouse.get("quantity"))
+                        count += warehouse_stock
                     
                 await update_amount(key, count)
                 logger.info(f"Updated {key}, {count}")
             except Exception as e:
+                logger.warning(f"Произошла ошибка при добавлении количества на склад: {e!s}")
                 continue
 
     async def _find_id_on_site(self):
