@@ -1,10 +1,9 @@
-from aiogram import Router, types, F
+from aiogram import Router, types
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from keyboards.reply.main_keyboard import create_main_keyboard
-from database.db_config import check_auth, add_start_user
+from database.db_config import check_auth
 
-from utils.texts import get_greeting_text
 
 start_router = Router(name="start")
 

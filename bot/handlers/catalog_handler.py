@@ -1,8 +1,8 @@
-from typing import Text
-from aiogram import Router, types, F, Bot
+from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter, Command
 from database.db_config import (
+    check_auth,
     get_price_for_user,
     get_product_by_article_or_cross_number,
 )
@@ -18,7 +18,6 @@ from utils.texts import get_greeting_text
 from aiogram.types import InputMediaPhoto, InlineKeyboardMarkup, InlineKeyboardButton
 from sqlalchemy.exc import NoResultFound
 from utils.send_email import send_order_email
-from filters.excluded_message import ExcludedMessage
 from keyboards.reply.cancel_keyboard import create_cancel_keyboard
 from fsm.catalog_fsm import Form
 import pandas as pd
@@ -81,7 +80,8 @@ async def cancel_handler(
     #     return
 
     await state.clear()
-    keyboard = create_main_keyboard()
+    check = await check_auth(user_id=callback_query.from_user.id)
+    keyboard = create_main_keyboard(auth=check)
     if isinstance(callback_query, types.CallbackQuery):
         await callback_query.message.answer("Действия отменены", reply_markup=keyboard)
     else:

@@ -43,13 +43,13 @@ class UpdateCountService:
                 url = self.BASE_URL + f"api/product/stock/?id={item_id}&apiUid={self.apiUid}&dataType={self.dataType}"
                 response = await self._send_request(url)
 
-                stock = response.get("product", {}).get("stock", {})
+                stock = response.get("product", {}).get("stock", [])
                 count = 0
 
-                for warehouses in stock:
-                    for warehouse in warehouses:
-                        warehouse_stock = int(warehouse.get("quantity"))
-                        count += warehouse_stock
+                for warehouse_data in stock:
+                    warehouse = warehouse_data.get("warehouse", {})
+                    warehouse_stock = int(warehouse.get("quantity", 0))
+                    count += warehouse_stock
                     
                 await update_amount(key, count)
                 logger.info(f"Updated {key}, {count}")
