@@ -2,7 +2,7 @@ from aiogram import Router, types, F
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter, Command
-from database.db_config import add_user, check_user_role
+from database.db_config import add_user, check_auth, check_user_role
 from utils.validation import validate_phone_number
 from keyboards.reply.main_keyboard import create_main_keyboard
 from keyboards.inline.auth_keyboard import create_inline_navigation_keyboard
@@ -38,7 +38,8 @@ async def cancel_handler(
 
     await state.clear()
 
-    keyboard = create_main_keyboard()
+    check = await check_auth(user_id=callback_query.from_user.id)
+    keyboard = create_main_keyboard(auth=check)
     if isinstance(callback_query, types.CallbackQuery):
         await callback_query.message.answer("Действия отменены", reply_markup=keyboard)
     else:
